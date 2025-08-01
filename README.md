@@ -1,12 +1,44 @@
-# React + Vite
+# Pompompurin Time Utility ⏰🍮
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A cute, multi-functional time utility app themed after Sanrio's Pompompurin! Built with React, Vite, and Material-UI.
 
-Currently, two official plugins are available:
+![Pompompurin](https://static.wikia.nocookie.net/sanrio/images/7/7e/Pompompurin_2022.png)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Features
+- **World Clock:** View the current time in multiple time zones. Add or remove clocks easily.
+- **Countdown Timer:** Set a timer with hours, minutes, and seconds. Get a warning at 10% remaining and a cute beep when time is up.
+- **Stopwatch:** Start, stop, lap, and reset. See all your lap times.
+- **Pompompurin Theme:** Creamy yellow, brown, and pink color palette, playful font, and a Pompompurin mascot in the header.
+- **Responsive:** Works on desktop and mobile.
 
-## Expanding the ESLint configuration
+## Demo
+[Live Demo](https://github.com/keatkean/pompompurin-time-utility)
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## Setup
+1. **Clone the repo:**
+   ```sh
+   git clone https://github.com/keatkean/pompompurin-time-utility.git
+   cd pompompurin-time-utility
+   ```
+2. **Install dependencies:**
+   ```sh
+   npm install
+   ```
+3. **Run the app:**
+   ```sh
+   npm run dev
+   ```
+4. **Open in browser:**
+   Visit [http://localhost:5173](http://localhost:5173)
+
+## Timer Sound
+- The timer uses a beep sound (`public/beep-07a.wav`). Ensure your browser tab is not muted.
+
+## Tech Stack
+- [React](https://react.dev/)
+- [Vite](https://vitejs.dev/)
+- [Material-UI (MUI)](https://mui.com/)
+- [Sanrio Pompompurin](https://www.sanrio.com/collections/pompompurin)
+
+## License
+MIT
