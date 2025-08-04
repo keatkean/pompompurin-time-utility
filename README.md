@@ -12,7 +12,7 @@ A cute, multi-functional time utility app themed after Sanrio's Pompompurin! Bui
 - **Responsive:** Works on desktop and mobile.
 
 ## Demo
-[Live Demo](https://github.com/keatkean/pompompurin-time-utility)
+[Live Demo](https://keatkean.github.io/pompompurin-time-utility/)
 
 ## Setup
 1. **Clone the repo:**
