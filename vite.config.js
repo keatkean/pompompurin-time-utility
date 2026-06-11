@@ -3,12 +3,12 @@ import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 
 // https://vite.dev/config/
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   base: '/pompompurin-time-utility/',
   plugins: [
     react(),
     VitePWA({
-      disable: Boolean(process.env.VITEST),
+      disable: mode === 'test',
       registerType: 'autoUpdate',
       includeAssets: ['pompompurin.svg', 'beep-07a.wav'],
       manifest: {
@@ -32,4 +32,4 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: './src/setupTests.js',
   },
-})
+}))
