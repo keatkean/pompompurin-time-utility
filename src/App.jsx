@@ -1,25 +1,14 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { Container, Box, Tabs, Tab, CssBaseline, Paper, Typography } from '@mui/material';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import TimerIcon from '@mui/icons-material/Timer';
 import ShutterSpeedIcon from '@mui/icons-material/ShutterSpeed';
+import SchoolIcon from '@mui/icons-material/School';
 import WorldClock from './components/WorldClock';
 import Timer from './components/Timer';
 import Stopwatch from './components/Stopwatch';
-
-// Pompompurin SVG (simple, for demo)
-const PompompurinSVG = () => (
-  <svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <ellipse cx="32" cy="40" rx="24" ry="18" fill="#FFF8DC" stroke="#A67C52" strokeWidth="2"/>
-    <ellipse cx="32" cy="28" rx="20" ry="16" fill="#FFF8DC" stroke="#A67C52" strokeWidth="2"/>
-    <ellipse cx="32" cy="20" rx="8" ry="6" fill="#A67C52"/>
-    <ellipse cx="24" cy="28" rx="2" ry="3" fill="#A67C52"/>
-    <ellipse cx="40" cy="28" rx="2" ry="3" fill="#A67C52"/>
-    <ellipse cx="32" cy="34" rx="3" ry="2" fill="#A67C52"/>
-    <ellipse cx="32" cy="38" rx="1.5" ry="1" fill="#A67C52"/>
-  </svg>
-);
+import Pomodoro from './components/Pomodoro';
 
 const pompompurinTheme = createTheme({
   palette: {
@@ -41,7 +30,7 @@ const pompompurinTheme = createTheme({
     },
   },
   typography: {
-    fontFamily: `'Baloo 2', 'Quicksand', 'Nunito', 'Comic Sans MS', cursive, sans-serif`,
+    fontFamily: `'Baloo 2', 'Quicksand', 'Comic Sans MS', cursive, sans-serif`,
     h2: { fontWeight: 700 },
     h5: { fontWeight: 700 },
     button: { fontWeight: 700 },
@@ -62,6 +51,8 @@ const pompompurinTheme = createTheme({
         root: {
           borderRadius: 16,
           fontWeight: 700,
+          minWidth: 100,
+          fontSize: 16,
         },
       },
     },
@@ -83,7 +74,8 @@ const pompompurinTheme = createTheme({
         root: {
           color: '#A67C52',
           fontWeight: 700,
-          fontSize: 18,
+          fontSize: 14,
+          minWidth: 0,
         },
       },
     },
@@ -103,22 +95,27 @@ function App() {
       <Box minHeight="100vh" display="flex" alignItems="center" justifyContent="center" sx={{ background: 'linear-gradient(135deg, #FFF8DC 60%, #E6CBA8 100%)' }}>
         <Container maxWidth="sm" disableGutters>
           <Box display="flex" flexDirection="column" alignItems="center" mb={2}>
-            <PompompurinSVG />
-            <Typography variant="h4" fontWeight={700} color="primary" sx={{ mt: 1, mb: 2, fontFamily: 'Baloo 2, Quicksand, Nunito, Comic Sans MS, cursive, sans-serif' }}>
+            <img
+              src={`${import.meta.env.BASE_URL}pompompurin.svg`}
+              alt="Pompompurin"
+              width={80}
+              height={80}
+            />
+            <Typography variant="h4" component="h1" fontWeight={700} color="primary" sx={{ mt: 1, mb: 2 }}>
               Pompompurin Time Utility
             </Typography>
           </Box>
-          <Paper elevation={6} sx={{ p: 2, mb: 4, borderRadius: 6, maxWidth: 520, mx: 'auto', bgcolor: 'background.paper' }}>
+          <Paper elevation={6} sx={{ p: 2, mb: 4, borderRadius: 6, maxWidth: 520, mx: 'auto' }}>
             <Tabs
               value={value}
               onChange={handleChange}
               centered
-              slotProps={{ indicator: { style: { background: '#A67C52', height: 4, borderRadius: 2 } } }}
               variant="fullWidth"
             >
               <Tab icon={<AccessTimeIcon />} label="World Clock" />
               <Tab icon={<TimerIcon />} label="Timer" />
               <Tab icon={<ShutterSpeedIcon />} label="Stopwatch" />
+              <Tab icon={<SchoolIcon />} label="Pomodoro" />
             </Tabs>
           </Paper>
           <Box display="flex" flexDirection="column" alignItems="center" justifyContent="center" minHeight={420}>
@@ -131,7 +128,17 @@ function App() {
             <Box sx={{ display: value === 2 ? 'block' : 'none', width: '100%' }}>
               <Stopwatch />
             </Box>
+            <Box sx={{ display: value === 3 ? 'block' : 'none', width: '100%' }}>
+              <Pomodoro />
+            </Box>
           </Box>
+          <Typography
+            variant="caption"
+            component="footer"
+            sx={{ display: 'block', textAlign: 'center', color: 'text.secondary', mt: 4, mb: 2, px: 2 }}
+          >
+            Unofficial fan project — Pompompurin © Sanrio Co., Ltd. Not affiliated with or endorsed by Sanrio.
+          </Typography>
         </Container>
       </Box>
     </ThemeProvider>

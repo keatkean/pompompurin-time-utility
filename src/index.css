@@ -1,11 +1,35 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
 body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
   background: #FFF8DC;
-  font-family: 'Baloo 2', 'Quicksand', 'Nunito', 'Comic Sans MS', cursive, sans-serif;
+  font-family: 'Baloo 2', 'Quicksand', 'Comic Sans MS', cursive, sans-serif;
+}
+
+@keyframes pudding-wobble {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-3deg); }
+  75% { transform: rotate(3deg); }
+}
+
+@keyframes pudding-bounce {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-12px) scale(1.06); }
+}
+
+.pudding-wobble {
+  animation: pudding-wobble 0.5s ease-in-out infinite;
+  transform-origin: 50% 90%;
+}
+
+.pudding-bounce {
+  animation: pudding-bounce 0.9s ease-in-out infinite;
+  transform-origin: 50% 100%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pudding-wobble,
+  .pudding-bounce {
+    animation: none;
+  }
 }
