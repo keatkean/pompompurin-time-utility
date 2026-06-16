@@ -10,7 +10,9 @@ export default defineConfig(({ mode }) => ({
     VitePWA({
       disable: mode === 'test',
       registerType: 'autoUpdate',
-      includeAssets: ['pompompurin.svg', 'beep-07a.wav'],
+      // No includeAssets: workbox.globPatterns below already precaches the svg
+      // favicon and the wav, and includeManifestIcons covers the PNG icons —
+      // listing them here too produced duplicate precache entries.
       manifest: {
         name: 'Pompompurin Time Utility',
         short_name: 'PompomTime',
@@ -19,15 +21,27 @@ export default defineConfig(({ mode }) => ({
         background_color: '#FFF8DC',
         display: 'standalone',
         icons: [
-          { src: 'pompompurin.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any' },
-          { src: 'pompompurin.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'maskable' },
+          { src: 'pwa-192x192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
+          { src: 'pwa-512x512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
+          { src: 'pwa-maskable-512x512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
         ],
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,svg,wav,png}'],
+        globPatterns: ['**/*.{js,css,html,svg,wav,png,woff2}'],
       },
     }),
   ],
+  build: {
+    rollupOptions: {
+      output: {
+        // Split the MUI/Emotion vendor code into its own chunk so it caches
+        // independently of app code and clears Vite's >500 kB chunk warning.
+        manualChunks: {
+          mui: ['@mui/material', '@mui/icons-material', '@emotion/react', '@emotion/styled'],
+        },
+      },
+    },
+  },
   test: {
     environment: 'jsdom',
     setupFiles: './src/setupTests.js',

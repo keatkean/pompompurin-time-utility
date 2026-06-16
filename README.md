@@ -49,11 +49,6 @@ Pushes to `main` are automatically built, tested, and deployed to GitHub Pages b
 
 > **One-time setup:** in the repository settings, set **Settings → Pages → Build and deployment → Source** to **GitHub Actions**.
 
-You can still deploy manually if needed:
-```sh
-npm run deploy
-```
-
 ## Timer Sound
 - The timer uses a beep sound (`public/beep-07a.wav`). Ensure your browser tab is not muted.
 

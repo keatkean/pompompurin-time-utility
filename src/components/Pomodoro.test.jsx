@@ -43,6 +43,18 @@ describe('Pomodoro', () => {
     expect(screen.getByText(/5 collected · 1 golden/)).toBeInTheDocument();
   });
 
+  it('awards the sticker for a focus session that completed while the tab was closed', () => {
+    localStorage.setItem(
+      'pompompurinPomodoroSession',
+      JSON.stringify({ endTime: Date.now() - 5_000, phase: 'focus', focusMinutes: 25, breakMinutes: 5 })
+    );
+    render(<Pomodoro />);
+
+    expect(screen.getByText(/1 collected/)).toBeInTheDocument();
+    expect(screen.getByText('Ready for a focus session?')).toBeInTheDocument();
+    expect(localStorage.getItem('pompompurinPomodoroSession')).toBeNull();
+  });
+
   it('restores a running session after a page refresh', () => {
     localStorage.setItem(
       'pompompurinPomodoroSession',

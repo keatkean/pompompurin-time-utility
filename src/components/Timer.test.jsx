@@ -96,4 +96,45 @@ describe('Timer', () => {
     expect(screen.getByText(/Time's up/)).toBeInTheDocument();
     expect(localStorage.getItem('pompompurinTimer')).toBeNull();
   });
+
+  it('plays the alert when restoring a timer that finished while away', () => {
+    localStorage.setItem(
+      'pompompurinTimer',
+      JSON.stringify({ endTime: Date.now() - 5_000, initialTime: 60 })
+    );
+    render(<Timer />);
+
+    expect(playMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('restores a paused timer after a page refresh', () => {
+    // Pausing persists the frozen remaining time; a refresh should resume it
+    // paused at that time rather than losing the timer entirely.
+    localStorage.setItem(
+      'pompompurinTimer',
+      JSON.stringify({ paused: true, remaining: 200, initialTime: 300 })
+    );
+    render(<Timer />);
+
+    expect(screen.getByText('00:03:20')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Resume' })).toBeEnabled();
+
+    // It is paused, so the clock does not advance on its own.
+    act(() => vi.advanceTimersByTime(2000));
+    expect(screen.getByText('00:03:20')).toBeInTheDocument();
+  });
+
+  it('keeps a paused timer in storage so it survives a refresh', () => {
+    render(<Timer />);
+    fireEvent.change(screen.getByLabelText('Minutes'), { target: { value: '5' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Start' }));
+
+    act(() => vi.advanceTimersByTime(99 * 1000));
+    fireEvent.click(screen.getByRole('button', { name: 'Pause' }));
+
+    const saved = JSON.parse(localStorage.getItem('pompompurinTimer'));
+    expect(saved.paused).toBe(true);
+    expect(saved.remaining).toBe(201);
+    expect(saved.initialTime).toBe(300);
+  });
 });

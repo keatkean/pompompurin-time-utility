@@ -28,6 +28,11 @@ function loadSession() {
     if (saved && typeof saved.endTime === 'number' && (saved.phase === 'focus' || saved.phase === 'break')) {
       const remaining = Math.ceil((saved.endTime - Date.now()) / 1000);
       if (remaining > 0) return { ...saved, remaining };
+      // A focus session that completed while the tab was closed still earns its
+      // sticker; a completed break carries no reward, so let it be discarded.
+      if (saved.phase === 'focus') {
+        return { focusFinishedWhileAway: true, focusMinutes: saved.focusMinutes, breakMinutes: saved.breakMinutes };
+      }
     }
   } catch {
     // Corrupted storage — discard below.
@@ -41,7 +46,7 @@ const Pomodoro = () => {
   const [focusMinutes, setFocusMinutes] = useState(restored?.focusMinutes ?? 25);
   const [breakMinutes, setBreakMinutes] = useState(restored?.breakMinutes ?? 5);
   const [phase, setPhase] = useState(restored?.phase ?? 'focus');
-  const [isActive, setIsActive] = useState(Boolean(restored));
+  const [isActive, setIsActive] = useState(Boolean(restored?.remaining));
   const [timeLeft, setTimeLeft] = useState(restored?.remaining ?? 0);
   const [stickers, setStickers] = useState(loadStickers);
   const endTimeRef = useRef(restored?.endTime ?? 0);
@@ -50,9 +55,19 @@ const Pomodoro = () => {
     localStorage.setItem(STICKERS_KEY, JSON.stringify(stickers));
   }, [stickers]);
 
+  // A focus session that finished while the tab was closed still earns its
+  // sticker on restore (the live completion path can't have run).
+  useEffect(() => {
+    if (restored?.focusFinishedWhileAway) {
+      setStickers((n) => n + 1);
+      localStorage.removeItem(SESSION_KEY);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   useEffect(() => {
     if (!isActive) return;
-    const id = setInterval(() => {
+    const fire = () => {
       const remaining = Math.max(0, Math.ceil((endTimeRef.current - Date.now()) / 1000));
       setTimeLeft(remaining);
       if (remaining > 0) return;
@@ -74,8 +89,18 @@ const Pomodoro = () => {
         setTimeLeft(0);
         localStorage.removeItem(SESSION_KEY);
       }
-    }, 250);
-    return () => clearInterval(id);
+    };
+    const id = setInterval(fire, 250);
+    // Background tabs throttle setInterval; reconcile the moment the tab is
+    // foregrounded so a buried session doesn't sit visibly overdue.
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible') fire();
+    };
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => {
+      clearInterval(id);
+      document.removeEventListener('visibilitychange', onVisibility);
+    };
   }, [isActive, phase, focusMinutes, breakMinutes]);
 
   const isPaused = !isActive && timeLeft > 0;

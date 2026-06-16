@@ -9,10 +9,15 @@ const TIMER_KEY = 'pompompurinTimer';
 const clampNumber = (value, max) => Math.max(0, Math.min(max, parseInt(value, 10) || 0));
 
 // A running timer stores its absolute end timestamp, so it can survive a
-// page refresh: still in the future → resume; already past → finished.
+// page refresh: still in the future → resume; already past → finished. A paused
+// timer instead stores its frozen remaining time, so it too survives a refresh
+// (its end timestamp is recomputed from "now" only when the user resumes).
 function loadSavedTimer() {
   try {
     const saved = JSON.parse(localStorage.getItem(TIMER_KEY));
+    if (saved && saved.paused && typeof saved.remaining === 'number' && typeof saved.initialTime === 'number') {
+      return { paused: { remaining: saved.remaining, initialTime: saved.initialTime } };
+    }
     if (saved && typeof saved.endTime === 'number' && typeof saved.initialTime === 'number') {
       const remaining = Math.ceil((saved.endTime - Date.now()) / 1000);
       if (remaining > 0) return { running: { ...saved, remaining } };
@@ -27,30 +32,57 @@ function loadSavedTimer() {
 
 const Timer = () => {
   const [restored] = useState(loadSavedTimer);
+  const restoredTimer = restored.running ?? restored.paused;
   const [hours, setHours] = useState(0);
   const [minutes, setMinutes] = useState(0);
   const [seconds, setSeconds] = useState(0);
   const [isActive, setIsActive] = useState(Boolean(restored.running));
-  const [timeLeft, setTimeLeft] = useState(restored.running?.remaining ?? 0);
-  const [initialTime, setInitialTime] = useState(restored.running?.initialTime ?? 0);
+  const [timeLeft, setTimeLeft] = useState(restoredTimer?.remaining ?? 0);
+  const [initialTime, setInitialTime] = useState(restoredTimer?.initialTime ?? 0);
   const [finished, setFinished] = useState(Boolean(restored.finishedWhileAway));
   const endTimeRef = useRef(restored.running?.endTime ?? 0);
+  // Guards the completion branch so it runs at most once per run (an extra tick
+  // can fire at remaining===0 before React tears down the interval).
+  const firedRef = useRef(false);
 
   useEffect(() => {
     if (!isActive) return;
-    const id = setInterval(() => {
+    const fire = () => {
       const remaining = Math.max(0, Math.ceil((endTimeRef.current - Date.now()) / 1000));
       setTimeLeft(remaining);
-      if (remaining === 0) {
+      if (remaining === 0 && !firedRef.current) {
+        firedRef.current = true;
         setIsActive(false);
         setFinished(true);
         localStorage.removeItem(TIMER_KEY);
         playCompletionSound();
         notify('Timer finished! 🍮');
       }
-    }, 250);
-    return () => clearInterval(id);
+    };
+    const id = setInterval(fire, 250);
+    // Background tabs throttle setInterval, so a buried timer can complete late.
+    // Reconcile (and fire the alert) immediately when the tab regains focus.
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible') fire();
+    };
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => {
+      clearInterval(id);
+      document.removeEventListener('visibilitychange', onVisibility);
+    };
   }, [isActive]);
+
+  // If the timer expired while the tab was closed, the celebration UI is shown
+  // on restore — also fire the alert so the completion isn't silent. Sound is
+  // best-effort (a fresh load has no user gesture, so autoplay is usually
+  // blocked); the desktop notification is the reliable part when granted.
+  useEffect(() => {
+    if (restored.finishedWhileAway) {
+      notify('Timer finished! 🍮');
+      playCompletionSound();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const isPaused = !isActive && timeLeft > 0;
   const inputSeconds = hours * 3600 + minutes * 60 + seconds;
@@ -70,6 +102,7 @@ const Timer = () => {
     setTimeLeft(total);
     setIsActive(true);
     setFinished(false);
+    firedRef.current = false;
     localStorage.setItem(TIMER_KEY, JSON.stringify({ endTime, initialTime: init }));
     initAudio();
     requestNotificationPermission();
@@ -77,7 +110,8 @@ const Timer = () => {
 
   const handlePause = () => {
     setIsActive(false);
-    localStorage.removeItem(TIMER_KEY);
+    // Persist the frozen remaining time so a paused timer survives a refresh.
+    localStorage.setItem(TIMER_KEY, JSON.stringify({ paused: true, remaining: timeLeft, initialTime }));
   };
 
   const handleReset = () => {
@@ -85,6 +119,7 @@ const Timer = () => {
     setTimeLeft(0);
     setInitialTime(0);
     setFinished(false);
+    firedRef.current = false;
     localStorage.removeItem(TIMER_KEY);
   };
 

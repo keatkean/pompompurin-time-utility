@@ -41,4 +41,22 @@ describe('WorldClock', () => {
 
     expect(screen.getByText('Singapore')).toBeInTheDocument();
   });
+
+  it('disables removing the only remaining time zone', () => {
+    render(<WorldClock />);
+    expect(screen.getByRole('button', { name: 'Remove Singapore' })).toBeDisabled();
+  });
+
+  it('falls back to the default when a saved time zone is not a real IANA zone', () => {
+    // A syntactically valid array whose timeZone is a string but not a real
+    // zone used to pass validation and then throw a RangeError during render,
+    // white-screening the whole app on every reload.
+    localStorage.setItem(
+      'worldClockTimeZones',
+      JSON.stringify([{ city: 'X', timeZone: 'Foo/Bar' }])
+    );
+    render(<WorldClock />);
+
+    expect(screen.getByText('Singapore')).toBeInTheDocument();
+  });
 });

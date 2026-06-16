@@ -18,10 +18,32 @@ import Pudding from './Pudding';
 const STORAGE_KEY = 'worldClockTimeZones';
 const DEFAULT_TIME_ZONES = [{ city: 'Singapore', timeZone: 'Asia/Singapore' }];
 
+// Used only where Intl.supportedValuesOf is unavailable (older Safari / some
+// webviews) — a real list keeps the "Add Time Zone" picker usable instead of
+// offering the single already-added default.
+const FALLBACK_TIME_ZONES = [
+  'Asia/Singapore', 'America/New_York', 'America/Los_Angeles', 'America/Chicago',
+  'Europe/London', 'Europe/Paris', 'Europe/Berlin', 'Asia/Tokyo', 'Asia/Shanghai',
+  'Asia/Kolkata', 'Asia/Dubai', 'Australia/Sydney', 'Pacific/Auckland', 'UTC',
+];
+
 const timeZoneNames =
   typeof Intl.supportedValuesOf === 'function'
     ? Intl.supportedValuesOf('timeZone')
-    : DEFAULT_TIME_ZONES.map((tz) => tz.timeZone);
+    : FALLBACK_TIME_ZONES;
+
+// A persisted timeZone string must be a real IANA zone — otherwise the render
+// path (toLocaleTimeString / Intl.DateTimeFormat) throws an uncaught RangeError
+// that, with no error boundary, blanks the whole app on every reload.
+const isValidTimeZone = (timeZone) => {
+  if (typeof timeZone !== 'string') return false;
+  try {
+    new Intl.DateTimeFormat('en-US', { timeZone });
+    return true;
+  } catch {
+    return false;
+  }
+};
 
 function loadSavedTimeZones() {
   try {
@@ -29,7 +51,7 @@ function loadSavedTimeZones() {
     if (
       Array.isArray(saved) &&
       saved.length > 0 &&
-      saved.every((tz) => typeof tz?.timeZone === 'string' && typeof tz?.city === 'string')
+      saved.every((tz) => isValidTimeZone(tz?.timeZone) && typeof tz?.city === 'string')
     ) {
       return saved;
     }
@@ -67,6 +89,9 @@ const WorldClock = () => {
   };
 
   const handleRemoveTimeZone = (timeZoneToRemove) => {
+    // Keep at least one clock — an empty list renders a confusing blank panel
+    // and would silently be replaced by the default on the next reload anyway.
+    if (timeZones.length <= 1) return;
     setTimeZones(timeZones.filter((tz) => tz.timeZone !== timeZoneToRemove));
   };
 
@@ -131,6 +156,7 @@ const WorldClock = () => {
                       onClick={() => handleRemoveTimeZone(tz.timeZone)}
                       size="small"
                       aria-label={`Remove ${tz.city}`}
+                      disabled={timeZones.length <= 1}
                       sx={{
                         position: 'absolute',
                         right: 0,

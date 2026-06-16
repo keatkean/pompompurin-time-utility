@@ -3,6 +3,7 @@ import { act, fireEvent, render, screen } from '@testing-library/react';
 import Stopwatch from './Stopwatch';
 
 beforeEach(() => {
+  localStorage.clear();
   vi.useFakeTimers();
 });
 
@@ -51,5 +52,20 @@ describe('Stopwatch', () => {
 
     expect(screen.getByText('00:00:00.00')).toBeInTheDocument();
     expect(screen.queryByText(/Lap 1/)).not.toBeInTheDocument();
+    expect(localStorage.getItem('pompompurinStopwatch')).toBeNull();
+  });
+
+  it('restores a running stopwatch and its laps after a reload', () => {
+    // A running stopwatch persists its absolute anchor; on reload elapsed is
+    // recomputed from it so no time is lost.
+    localStorage.setItem(
+      'pompompurinStopwatch',
+      JSON.stringify({ anchor: Date.now() - 5000, isActive: true, laps: [2000] })
+    );
+    render(<Stopwatch />);
+
+    expect(screen.getByText(/00:00:05\.\d{2}/)).toBeInTheDocument();
+    expect(screen.getByText('Lap 1: 00:00:02.00')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Stop' })).toBeEnabled();
   });
 });

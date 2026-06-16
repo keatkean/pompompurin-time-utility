@@ -2,17 +2,22 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <!-- Defense-in-depth CSP. 'unsafe-inline' in style-src is required by
+         Emotion/MUI runtime style injection; everything else is same-origin
+         (fonts, icons, and assets are all self-hosted). GitHub Pages can't set
+         headers, so a meta tag is the only option (frame-ancestors is ignored
+         in meta and omitted to avoid a console warning). -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'"
+    />
     <link rel="icon" type="image/svg+xml" href="/pompompurin.svg" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="A cute Pompompurin-themed world clock, countdown timer, stopwatch, and pomodoro." />
     <meta name="theme-color" content="#A67C52" />
     <title>Pompompurin Time Utility</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400..800&family=Quicksand:wght@400;700&display=swap"
-      rel="stylesheet"
-    />
+    <!-- Fonts are self-hosted via @fontsource (imported in src/main.jsx). -->
   </head>
   <body>
     <div id="root"></div>

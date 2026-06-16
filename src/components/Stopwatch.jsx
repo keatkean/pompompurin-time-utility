@@ -3,12 +3,34 @@ import { Button, Typography, List, ListItem, ListItemText, Box, Stack, Paper } f
 import { formatStopwatch } from '../utils/formatTime';
 
 const TICK_MS = 33;
+const STORAGE_KEY = 'pompompurinStopwatch';
+
+// While running we persist the absolute anchor (= now - elapsed) so a reload
+// can recompute elapsed without drift; while stopped we persist the frozen
+// elapsed. Laps ride along either way so a running stopwatch survives a reload.
+function loadSaved() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
+    if (saved && Array.isArray(saved.laps)) {
+      if (saved.isActive && typeof saved.anchor === 'number') {
+        return { anchor: saved.anchor, isActive: true, laps: saved.laps, elapsed: Date.now() - saved.anchor };
+      }
+      if (typeof saved.elapsed === 'number') {
+        return { anchor: 0, isActive: false, laps: saved.laps, elapsed: saved.elapsed };
+      }
+    }
+  } catch {
+    localStorage.removeItem(STORAGE_KEY);
+  }
+  return { anchor: 0, isActive: false, laps: [], elapsed: 0 };
+}
 
 const Stopwatch = () => {
-  const [elapsed, setElapsed] = useState(0);
-  const [isActive, setIsActive] = useState(false);
-  const [laps, setLaps] = useState([]);
-  const startTimeRef = useRef(0);
+  const [restored] = useState(loadSaved);
+  const [elapsed, setElapsed] = useState(restored.elapsed);
+  const [isActive, setIsActive] = useState(restored.isActive);
+  const [laps, setLaps] = useState(restored.laps);
+  const startTimeRef = useRef(restored.anchor);
 
   useEffect(() => {
     if (!isActive) return;
@@ -18,26 +40,44 @@ const Stopwatch = () => {
     return () => clearInterval(id);
   }, [isActive]);
 
+  // Persist imperatively from the handlers (not on every tick) to avoid 30
+  // localStorage writes per second while the stopwatch runs.
+  const persistRunning = (currentLaps) =>
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ anchor: startTimeRef.current, isActive: true, laps: currentLaps }));
+  const persistStopped = (currentElapsed, currentLaps) => {
+    if (currentElapsed > 0 || currentLaps.length > 0) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ elapsed: currentElapsed, isActive: false, laps: currentLaps }));
+    } else {
+      localStorage.removeItem(STORAGE_KEY);
+    }
+  };
+
   const handleStart = () => {
     startTimeRef.current = Date.now() - elapsed;
     setIsActive(true);
+    persistRunning(laps);
   };
 
   const handleStop = () => {
-    setElapsed(Date.now() - startTimeRef.current);
+    const stopped = Date.now() - startTimeRef.current;
+    setElapsed(stopped);
     setIsActive(false);
+    persistStopped(stopped, laps);
   };
 
   const handleLap = () => {
     const lapTime = Date.now() - startTimeRef.current;
     setElapsed(lapTime);
-    setLaps((prev) => [...prev, lapTime]);
+    const nextLaps = [...laps, lapTime];
+    setLaps(nextLaps);
+    persistRunning(nextLaps);
   };
 
   const handleReset = () => {
     setIsActive(false);
     setElapsed(0);
     setLaps([]);
+    localStorage.removeItem(STORAGE_KEY);
   };
 
   return (
