@@ -3,10 +3,19 @@ import { TextField, Button, Typography, Stack, Paper, Box, Chip } from '@mui/mat
 import { formatDuration } from '../utils/formatTime';
 import { initAudio, playCompletionSound, requestNotificationPermission, notify } from '../utils/alerts';
 import Pudding from './Pudding';
+import Sprinkles from './Sprinkles';
 
 const SESSION_KEY = 'pompompurinPomodoroSession';
 const STICKERS_KEY = 'pompompurinPomodoroStickers';
 const MAX_VISIBLE_STICKERS = 24;
+
+// Every 4th sticker is golden (a completed set); the rest cycle flavor by set,
+// so the sheet visibly "unlocks" new pudding flavors as you rack up sessions.
+const STICKER_FLAVORS = ['classic', 'strawberry', 'matcha', 'chocolate'];
+const stickerProps = (i) =>
+  (i + 1) % 4 === 0
+    ? { golden: true }
+    : { flavor: STICKER_FLAVORS[Math.floor(i / 4) % STICKER_FLAVORS.length] };
 
 const clampMinutes = (value, max) => Math.max(1, Math.min(max, parseInt(value, 10) || 1));
 
@@ -49,6 +58,8 @@ const Pomodoro = () => {
   const [isActive, setIsActive] = useState(Boolean(restored?.remaining));
   const [timeLeft, setTimeLeft] = useState(restored?.remaining ?? 0);
   const [stickers, setStickers] = useState(loadStickers);
+  // Bumped on each live focus completion to replay the sprinkle burst.
+  const [celebrate, setCelebrate] = useState(0);
   const endTimeRef = useRef(restored?.endTime ?? 0);
 
   useEffect(() => {
@@ -75,6 +86,7 @@ const Pomodoro = () => {
       if (phase === 'focus') {
         // Focus complete: earn a sticker and roll straight into the break.
         setStickers((n) => n + 1);
+        setCelebrate((c) => c + 1);
         notify('Focus complete! Break time 🍮');
         const total = breakMinutes * 60;
         const endTime = Date.now() + total * 1000;
@@ -154,7 +166,10 @@ const Pomodoro = () => {
             }
             sx={{ fontWeight: 700, fontSize: 16, px: 1, bgcolor: 'secondary.main', color: '#5B4222' }}
           />
-          <Pudding fraction={phase === 'focus' ? puddingFraction : 1} sleeping={phase === 'break'} size={150} />
+          <Box sx={{ position: 'relative' }}>
+            <Pudding fraction={phase === 'focus' ? puddingFraction : 1} sleeping={phase === 'break'} size={150} />
+            {celebrate > 0 && <Sprinkles key={celebrate} />}
+          </Box>
           <Typography
             variant="h2"
             fontFamily="monospace"
@@ -217,7 +232,7 @@ const Pomodoro = () => {
                 </Typography>
               ) : (
                 Array.from({ length: Math.min(stickers, MAX_VISIBLE_STICKERS) }, (_, i) => (
-                  <Pudding key={i} size={32} golden={(i + 1) % 4 === 0} />
+                  <Pudding key={i} size={32} {...stickerProps(i)} />
                 ))
               )}
               {stickers > MAX_VISIBLE_STICKERS && (

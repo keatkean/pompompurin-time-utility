@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Button, Typography, List, ListItem, ListItemText, Box, Stack, Paper } from '@mui/material';
 import { formatStopwatch } from '../utils/formatTime';
+import Pudding from './Pudding';
 
 const TICK_MS = 33;
 const STORAGE_KEY = 'pompompurinStopwatch';
@@ -84,6 +85,11 @@ const Stopwatch = () => {
     <Box mt={6}>
       <Paper elevation={8} sx={{ p: 5, borderRadius: 3, maxWidth: 600, mx: 'auto' }}>
         <Stack spacing={5} alignItems="center">
+          {/* A living pudding that jiggles while the clock runs — and sleeps
+              when it's stopped, so the Stopwatch shares the app's mascot. */}
+          <Box className={isActive ? 'pudding-jiggle' : undefined}>
+            <Pudding size={120} sleeping={!isActive && elapsed === 0} />
+          </Box>
           <Typography
             variant="h2"
             fontFamily="monospace"

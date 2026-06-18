@@ -1,10 +1,21 @@
 import { useState, useEffect, useRef } from 'react';
-import { TextField, Button, Typography, Stack, Paper, Box, Alert } from '@mui/material';
+import { TextField, Button, Typography, Stack, Paper, Box, Alert, Chip } from '@mui/material';
 import { formatDuration } from '../utils/formatTime';
 import { initAudio, playCompletionSound, requestNotificationPermission, notify } from '../utils/alerts';
 import Pudding from './Pudding';
+import Sprinkles from './Sprinkles';
 
 const TIMER_KEY = 'pompompurinTimer';
+
+// One-tap presets for the everyday timers people actually set — much friendlier
+// than poking three number fields on a phone.
+const PRESETS = [
+  { label: 'Tea 🍵', seconds: 3 * 60 },
+  { label: 'Coffee ☕', seconds: 4 * 60 },
+  { label: 'Egg 🥚', seconds: 6 * 60 },
+  { label: 'Nap 😴', seconds: 20 * 60 },
+  { label: 'Focus 🍮', seconds: 25 * 60 },
+];
 
 const clampNumber = (value, max) => Math.max(0, Math.min(max, parseInt(value, 10) || 0));
 
@@ -123,6 +134,13 @@ const Timer = () => {
     localStorage.removeItem(TIMER_KEY);
   };
 
+  const applyPreset = (totalSeconds) => {
+    setHours(Math.floor(totalSeconds / 3600));
+    setMinutes(Math.floor((totalSeconds % 3600) / 60));
+    setSeconds(totalSeconds % 60);
+    setFinished(false);
+  };
+
   const timeFields = [
     { label: 'Hours', value: hours, setter: setHours, max: 99 },
     { label: 'Minutes', value: minutes, setter: setMinutes, max: 59 },
@@ -138,8 +156,12 @@ const Timer = () => {
               Hurry up! Less than 10% time remaining.
             </Alert>
           )}
-          <Box className={showWarning ? 'pudding-wobble' : finished ? 'pudding-bounce' : undefined}>
+          <Box
+            sx={{ position: 'relative' }}
+            className={showWarning ? 'pudding-wobble' : finished ? 'pudding-bounce' : undefined}
+          >
             <Pudding fraction={puddingFraction} size={150} />
+            {finished && <Sprinkles />}
           </Box>
           {finished && (
             <Typography variant="h5" color="primary" sx={{ fontWeight: 700 }}>
@@ -159,6 +181,19 @@ const Timer = () => {
           >
             {formatDuration(displayTime)}
           </Typography>
+          {!isActive && !isPaused && (
+            <Stack direction="row" spacing={1} justifyContent="center" flexWrap="wrap" useFlexGap>
+              {PRESETS.map(({ label, seconds: presetSeconds }) => (
+                <Chip
+                  key={label}
+                  label={label}
+                  onClick={() => applyPreset(presetSeconds)}
+                  variant="outlined"
+                  sx={{ fontWeight: 700, fontSize: 14, bgcolor: 'background.default' }}
+                />
+              ))}
+            </Stack>
+          )}
           <Stack direction="row" spacing={3} justifyContent="center">
             {timeFields.map(({ label, value, setter, max }) => (
               <TextField

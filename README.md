@@ -5,13 +5,26 @@ A cute, multi-functional time utility app themed after Sanrio's Pompompurin! Bui
 ![Pompompurin Time Utility — world clock with day/night cards](docs/screenshot.png)
 
 ## Features
-- **World Clock:** Live times in multiple time zones with day/night themed cards — Pompompurin sleeps on night-time cards! Use the **time-travel slider** to preview other hours and see which friends are in friendly calling hours (8am–10pm, green border). Your list is saved between visits.
-- **Living Pudding Timer:** A pudding gets eaten as the countdown runs — it wobbles when less than 10% remains and bounces with a celebration jingle when time is up. Pause/resume, desktop notifications, and the timer **survives a page refresh**.
-- **Stopwatch:** Start, stop, lap, and reset. Laps show both the lap split and the cumulative total.
-- **Pudding Pomodoro:** Focus/break cycles (default 25/5). Every completed focus session earns a pudding sticker — every 4th is golden! Stickers are saved forever, and a running session survives a refresh.
+- **World Clock:** Live times in multiple time zones with day/night themed cards — Pompompurin sleeps on night-time cards! A **smart zone picker** lets you search by city, country, or even abbreviation ("india", "uk", "vietnam") and shows each zone's current UTC offset and local time, grouped by region. Use the **time-travel slider** to preview other hours and see which friends are in friendly calling hours (8am–10pm, green border). A **"best time to reach everyone" overlap strip** shows, hour-by-hour, when all your zones are awake at once — tap any slot to jump there. Your list is saved between visits, and you can **share it as a link** (see below).
+- **Living Pudding Timer:** A pudding gets eaten as the countdown runs — it wobbles when less than 10% remains and bursts into a **sprinkle celebration** with a jingle when time is up. **One-tap presets** (Tea, Coffee, Egg, Nap, Focus) save you typing. Pause/resume, desktop notifications, and the timer **survives a page refresh**.
+- **Stopwatch:** Start, stop, lap, and reset, with a **jiggling pudding mascot** that runs alongside you. Laps show both the lap split and the cumulative total.
+- **Pudding Pomodoro:** Focus/break cycles (default 25/5). Every completed focus session earns a pudding sticker and a sprinkle burst — every 4th is golden, and new **flavors (strawberry, matcha, chocolate)** unlock as your sticker sheet grows. Stickers are saved forever, and a running session survives a refresh.
+- **Day & Night Mode:** Toggle between the creamy daytime palette and a cozy "bedtime pudding" night theme. Your choice is remembered, and it defaults to your system preference.
 - **Installable PWA:** Add it to your phone home screen or desktop — works offline.
-- **Pompompurin Theme:** Creamy yellow, brown, and pink color palette, playful font, and a Pompompurin mascot in the header.
+- **Pompompurin Theme:** Creamy yellow, brown, and pink color palette, playful font, a Pompompurin mascot in the header, and a **greeting that changes with your local time of day**.
 - **Responsive:** Works on desktop and mobile.
+
+## Sharing your clock
+The World Clock list is encoded in the page URL, so it travels with the link:
+
+- The address bar always reflects your current zones, e.g.
+  `…/pompompurin-time-utility/?tz=Asia/Singapore,Europe/London,America/New_York`.
+- Hit **Copy shareable link** to grab it, then send it to a friend or open it on
+  another device — they'll see *your* clock (and the same overlap strip) instead
+  of the default.
+- Opening a shared link takes precedence over the locally saved list. Unknown or
+  malformed zones in a link are ignored, so a stale or hand-edited link can never
+  crash the app — it just falls back to your saved list, then the default.
 
 ## Demo
 [Live Demo](https://keatkean.github.io/pompompurin-time-utility/)

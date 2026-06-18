@@ -1,18 +1,37 @@
 import { useId } from 'react';
 
+// Pudding flavors — body / stroke / caramel-cap color triples. `classic` is the
+// original Pompompurin flan; the rest are unlocked as Pomodoro reward stickers.
+const PUDDING_FLAVORS = {
+  classic: { body: '#FBE7A2', stroke: '#C99B5F', cap: '#A67C52' },
+  golden: { body: '#F4C95D', stroke: '#B8860B', cap: '#8A5A2B' },
+  matcha: { body: '#CFE8A8', stroke: '#7C9A4E', cap: '#5E7A33' },
+  strawberry: { body: '#FBD0DA', stroke: '#E59AAE', cap: '#E26D8A' },
+  chocolate: { body: '#C9A27A', stroke: '#8A5A2B', cap: '#5B3A1E' },
+};
+
 // Pompompurin-style flan. `fraction` (0..1) controls how much pudding is
 // left on the plate — the body is clipped from the top down as it gets
-// "eaten". `sleeping` swaps the eyes for closed lids; `golden` recolors the
-// flan for reward stickers.
-const Pudding = ({ fraction = 1, size = 120, sleeping = false, golden = false, className }) => {
+// "eaten". `sleeping` swaps the eyes for closed lids. `flavor` recolors the
+// flan; `golden` is kept as a shorthand for the golden reward sticker and
+// takes precedence over `flavor`.
+const Pudding = ({
+  fraction = 1,
+  size = 120,
+  sleeping = false,
+  golden = false,
+  flavor = 'classic',
+  className,
+}) => {
   const f = Math.max(0, Math.min(1, fraction));
   const clipId = useId().replaceAll(':', '');
   const bodyTop = 30;
   const bodyBottom = 92;
   const clipY = bodyTop + (1 - f) * (bodyBottom - bodyTop);
-  const bodyFill = golden ? '#F4C95D' : '#FBE7A2';
-  const bodyStroke = golden ? '#B8860B' : '#C99B5F';
-  const capFill = golden ? '#8A5A2B' : '#A67C52';
+  const palette = PUDDING_FLAVORS[golden ? 'golden' : flavor] ?? PUDDING_FLAVORS.classic;
+  const bodyFill = palette.body;
+  const bodyStroke = palette.stroke;
+  const capFill = palette.cap;
 
   return (
     <svg
