@@ -5,12 +5,14 @@ import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import TimerIcon from '@mui/icons-material/Timer';
 import ShutterSpeedIcon from '@mui/icons-material/ShutterSpeed';
 import SchoolIcon from '@mui/icons-material/School';
+import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import Brightness4Icon from '@mui/icons-material/Brightness4';
 import Brightness7Icon from '@mui/icons-material/Brightness7';
 import WorldClock from './components/WorldClock';
 import Timer from './components/Timer';
 import Stopwatch from './components/Stopwatch';
 import Pomodoro from './components/Pomodoro';
+import Calendar from './components/Calendar';
 import { dayPhase } from './utils/dayPhase';
 
 const THEME_KEY = 'pompompurinThemeMode';
@@ -185,6 +187,7 @@ function App() {
               variant="fullWidth"
             >
               <Tab icon={<AccessTimeIcon />} label="World Clock" />
+              <Tab icon={<CalendarMonthIcon />} label="Calendar" />
               <Tab icon={<TimerIcon />} label="Timer" />
               <Tab icon={<ShutterSpeedIcon />} label="Stopwatch" />
               <Tab icon={<SchoolIcon />} label="Pomodoro" />
@@ -195,12 +198,15 @@ function App() {
               <WorldClock />
             </Box>
             <Box sx={{ display: value === 1 ? 'block' : 'none', width: '100%' }}>
-              <Timer />
+              <Calendar />
             </Box>
             <Box sx={{ display: value === 2 ? 'block' : 'none', width: '100%' }}>
-              <Stopwatch />
+              <Timer />
             </Box>
             <Box sx={{ display: value === 3 ? 'block' : 'none', width: '100%' }}>
+              <Stopwatch />
+            </Box>
+            <Box sx={{ display: value === 4 ? 'block' : 'none', width: '100%' }}>
               <Pomodoro />
             </Box>
           </Box>
