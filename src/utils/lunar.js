@@ -49,6 +49,51 @@ const SOLAR_FESTIVALS = {
   '12-25': ['圣诞节', 'Christmas'],
 };
 
+// --- 24 solar terms (节气) ---
+// Intl doesn't provide these — they're astronomical: the Sun reaching each 15°
+// of apparent ecliptic longitude. Computed with Meeus's low-precision solar
+// formula (accurate to well within a day, which is all a date needs). Indexed
+// by longitude/15, starting at 0° = 春分.
+const SOLAR_TERMS = [
+  ['春分', 'Spring Equinox'], ['清明', 'Pure Brightness'], ['谷雨', 'Grain Rain'],
+  ['立夏', 'Start of Summer'], ['小满', 'Grain Buds'], ['芒种', 'Grain in Ear'],
+  ['夏至', 'Summer Solstice'], ['小暑', 'Minor Heat'], ['大暑', 'Major Heat'],
+  ['立秋', 'Start of Autumn'], ['处暑', 'End of Heat'], ['白露', 'White Dew'],
+  ['秋分', 'Autumn Equinox'], ['寒露', 'Cold Dew'], ['霜降', "Frost's Descent"],
+  ['立冬', 'Start of Winter'], ['小雪', 'Minor Snow'], ['大雪', 'Major Snow'],
+  ['冬至', 'Winter Solstice'], ['小寒', 'Minor Cold'], ['大寒', 'Major Cold'],
+  ['立春', 'Start of Spring'], ['雨水', 'Rain Water'], ['惊蛰', 'Insects Awaken'],
+];
+
+const DEG = Math.PI / 180;
+
+// Sun's apparent ecliptic longitude in degrees (0–360) at an instant (ms epoch).
+function sunLongitude(ms) {
+  const JD = ms / 86400000 + 2440587.5;
+  const T = (JD - 2451545.0) / 36525;
+  const L0 = 280.46646 + 36000.76983 * T + 0.0003032 * T * T;
+  const M = (357.52911 + 35999.05029 * T - 0.0001537 * T * T) * DEG;
+  const C =
+    (1.914602 - 0.004817 * T - 0.000014 * T * T) * Math.sin(M) +
+    (0.019993 - 0.000101 * T) * Math.sin(2 * M) +
+    0.000289 * Math.sin(3 * M);
+  const omega = (125.04 - 1934.136 * T) * DEG;
+  const lambda = L0 + C - 0.00569 - 0.00478 * Math.sin(omega);
+  return ((lambda % 360) + 360) % 360;
+}
+
+// The solar term that falls on a Gregorian day (China time), or undefined. A
+// term occurs the moment the Sun crosses a 15° boundary; the Sun moves < 1.5°
+// per day, so at most one boundary lands in any single day.
+export function solarTermOn(year, month, day) {
+  const startCST = Date.UTC(year, month - 1, day) - 8 * 3600000; // 00:00 China time, in UTC
+  const f0 = sunLongitude(startCST) / 15;
+  let f1 = sunLongitude(startCST + 86400000) / 15;
+  if (f1 < f0) f1 += 24; // longitude wrapped past 360°
+  if (Math.floor(f1) > Math.floor(f0)) return SOLAR_TERMS[(Math.floor(f0) + 1) % 24];
+  return undefined;
+}
+
 // Raw chinese-calendar fields for an instant. Pass a Date at noon UTC of the
 // target Gregorian day (lunar↔Gregorian is a fixed mapping, so the time of day
 // only needs to be clear of the China-midnight boundary).
@@ -91,6 +136,7 @@ export function lunarInfo(date) {
     if (next.monthNum === 1 && next.day === 1) festival = ['除夕', "New Year's Eve"];
   }
   const solarFestival = SOLAR_FESTIVALS[`${date.getUTCMonth() + 1}-${date.getUTCDate()}`];
+  const solarTerm = solarTermOn(date.getUTCFullYear(), date.getUTCMonth() + 1, date.getUTCDate());
 
   return {
     monthName: (isLeap ? '闰' : '') + (LUNAR_MONTHS[monthNum - 1] ?? `${monthNum}月`),
@@ -101,6 +147,7 @@ export function lunarInfo(date) {
     zodiacEn,
     relatedYear,
     festival, // [zh, en] | undefined — traditional festival (takes priority)
+    solarTerm, // [zh, en] | undefined — 24 节气
     solarFestival, // [zh, en] | undefined — fixed Gregorian holiday
   };
 }

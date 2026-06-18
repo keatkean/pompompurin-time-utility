@@ -83,8 +83,8 @@ const Stopwatch = () => {
 
   return (
     <Box mt={6}>
-      <Paper elevation={8} sx={{ p: 5, borderRadius: 3, maxWidth: 600, mx: 'auto' }}>
-        <Stack spacing={5} alignItems="center">
+      <Paper elevation={8} sx={{ p: { xs: 2.5, sm: 5 }, borderRadius: 3, maxWidth: 600, mx: 'auto' }}>
+        <Stack spacing={{ xs: 3, sm: 5 }} alignItems="center">
           {/* A living pudding that jiggles while the clock runs — and sleeps
               when it's stopped, so the Stopwatch shares the app's mascot. */}
           <Box className={isActive ? 'pudding-jiggle' : undefined}>
@@ -94,11 +94,17 @@ const Stopwatch = () => {
             variant="h2"
             fontFamily="monospace"
             fontWeight="bold"
-            sx={{ textAlign: 'center', fontSize: 56, color: 'primary.main' }}
+            sx={{ textAlign: 'center', width: '100%', fontSize: 'clamp(1.6rem, 9vw, 3.5rem)', color: 'primary.main' }}
           >
             {formatStopwatch(elapsed)}
           </Typography>
-          <Stack direction="row" spacing={3} justifyContent="center">
+          <Stack
+            direction="row"
+            spacing={{ xs: 1.5, sm: 3 }}
+            justifyContent="center"
+            flexWrap="wrap"
+            useFlexGap
+          >
             <Button variant="contained" onClick={handleStart} disabled={isActive}>
               Start
             </Button>

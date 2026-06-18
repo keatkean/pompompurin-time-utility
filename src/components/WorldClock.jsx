@@ -107,6 +107,9 @@ const WorldClock = () => {
     } catch {
       // History/URL unavailable (e.g. sandboxed) — localStorage still persists.
     }
+    // Let other panels (e.g. the Calendar's zone picker) react in the same tab —
+    // the `storage` event only fires across tabs, not within one.
+    window.dispatchEvent(new CustomEvent('worldclock-zones-changed'));
   }, [timeZones]);
 
   const handleCopyLink = () => {
@@ -212,7 +215,7 @@ const WorldClock = () => {
 
   return (
     <Box mt={6}>
-      <Paper elevation={8} sx={{ p: 5, borderRadius: 3, maxWidth: 600, mx: 'auto' }}>
+      <Paper elevation={8} sx={{ p: { xs: 2, sm: 5 }, borderRadius: 3, maxWidth: 600, mx: 'auto' }}>
         <Stack spacing={4} alignItems="center" width="100%">
           <Stack spacing={4} width="100%" alignItems="center">
             {timeZones.map((tz) => {
@@ -232,7 +235,7 @@ const WorldClock = () => {
                   key={tz.timeZone}
                   elevation={4}
                   sx={{
-                    p: 4,
+                    p: { xs: 2.5, sm: 4 },
                     borderRadius: 6,
                     maxWidth: 480,
                     bgcolor: phase.bg,
@@ -289,7 +292,7 @@ const WorldClock = () => {
                     variant="h2"
                     fontFamily="monospace"
                     fontWeight="bold"
-                    sx={{ textAlign: 'center', fontSize: 48, color: phase.accent }}
+                    sx={{ textAlign: 'center', width: '100%', fontSize: 'clamp(1.5rem, 8.5vw, 3rem)', color: phase.accent }}
                   >
                     {timeString}
                   </Typography>

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { lunarInfo, utcNoon } from './lunar';
+import { lunarInfo, utcNoon, solarTermOn } from './lunar';
 
 describe('lunar (万年历)', () => {
   it('identifies Chinese New Year 2026 (lunar 正月初一, 丙午 Year of the Horse)', () => {
@@ -38,5 +38,20 @@ describe('lunar (万年历)', () => {
   it('surfaces fixed Gregorian holidays', () => {
     expect(lunarInfo(utcNoon(2026, 10, 1)).solarFestival).toEqual(['国庆节', 'National Day']);
     expect(lunarInfo(utcNoon(2026, 1, 1)).solarFestival).toEqual(['元旦', "New Year's Day"]);
+  });
+
+  it('computes the 24 solar terms (节气) on their exact 2026 dates', () => {
+    // Cross-checked against the official 2026 almanac (Purple Mountain Obs.).
+    expect(solarTermOn(2026, 2, 4)).toEqual(['立春', 'Start of Spring']);
+    expect(solarTermOn(2026, 3, 20)).toEqual(['春分', 'Spring Equinox']);
+    expect(solarTermOn(2026, 4, 5)).toEqual(['清明', 'Pure Brightness']);
+    expect(solarTermOn(2026, 6, 21)).toEqual(['夏至', 'Summer Solstice']);
+    expect(solarTermOn(2026, 9, 23)).toEqual(['秋分', 'Autumn Equinox']);
+    expect(solarTermOn(2026, 12, 22)).toEqual(['冬至', 'Winter Solstice']);
+  });
+
+  it('returns no solar term on an ordinary day', () => {
+    expect(solarTermOn(2026, 6, 18)).toBeUndefined();
+    expect(lunarInfo(utcNoon(2026, 6, 21)).solarTerm).toEqual(['夏至', 'Summer Solstice']);
   });
 });

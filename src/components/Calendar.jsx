@@ -45,9 +45,12 @@ const sameDay = (a, b) => a.year === b.year && a.month === b.month && a.day === 
 const Calendar = () => {
   const [now, setNow] = useState(() => new Date());
   const [viewingZone, setViewingZone] = useState(localZone);
-  const today = dateInZone(now, viewingZone);
-  const [view, setView] = useState({ year: today.year, month: today.month });
-  const [selected, setSelected] = useState(today);
+  const [savedZones, setSavedZones] = useState(loadSavedZones);
+  const [view, setView] = useState(() => {
+    const t = dateInZone(new Date(), localZone);
+    return { year: t.year, month: t.month };
+  });
+  const [selected, setSelected] = useState(() => dateInZone(new Date(), localZone));
 
   // A minute's resolution is plenty for a calendar — enough to roll over at
   // midnight and keep the "current date per zone" line fresh.
@@ -56,15 +59,37 @@ const Calendar = () => {
     return () => clearInterval(id);
   }, []);
 
+  // The zone list is owned by the World Clock; re-read it whenever that changes
+  // — same tab via a custom event, other tabs via the storage event — so adding
+  // or removing a city there is reflected here immediately.
+  useEffect(() => {
+    const refresh = () => setSavedZones(loadSavedZones());
+    window.addEventListener('worldclock-zones-changed', refresh);
+    window.addEventListener('storage', refresh);
+    return () => {
+      window.removeEventListener('worldclock-zones-changed', refresh);
+      window.removeEventListener('storage', refresh);
+    };
+  }, []);
+
   // Local zone first, then the cities saved in the World Clock — so the two
   // "world" features share one list.
   const zoneOptions = useMemo(() => {
     const opts = [{ label: 'Your time', timeZone: localZone }];
-    for (const z of loadSavedZones()) {
+    for (const z of savedZones) {
       if (z.timeZone !== localZone) opts.push({ label: z.city, timeZone: z.timeZone });
     }
     return opts;
-  }, []);
+  }, [savedZones]);
+
+  // If the chosen zone was just removed from the World Clock, fall back to local
+  // (use the guarded value immediately so the Select never holds a stale option).
+  const zone = zoneOptions.some((z) => z.timeZone === viewingZone) ? viewingZone : localZone;
+  useEffect(() => {
+    if (zone !== viewingZone) setViewingZone(zone);
+  }, [zone, viewingZone]);
+
+  const today = dateInZone(now, zone);
 
   // 42 cells (6 weeks) covering the visible month plus the spill-over days that
   // fill the first and last rows.
@@ -109,15 +134,29 @@ const Calendar = () => {
   });
   const selWeekdayZh = selDate.toLocaleDateString('zh-CN', { weekday: 'long' });
   const fest = selInfo.festival || selInfo.solarFestival;
-  const viewingAsleep = dayPhase(getLocalHour(now, viewingZone)) === 'night';
+  const viewingAsleep = dayPhase(getLocalHour(now, zone)) === 'night';
   const selectedIsToday = sameDay(selected, today);
 
-  const cellLunarText = (info) =>
-    info.festival?.[0] || info.solarFestival?.[0] || (info.isFirstOfMonth ? info.monthName : info.dayName);
+  const FESTIVAL_RED = '#C0392B';
+  const TERM_GREEN = '#2E7D32';
+  // Cell sub-label priority: traditional festival → 节气 → fixed holiday → lunar day.
+  const cellBadge = (info, isToday) => {
+    if (info.festival) return { text: info.festival[0], color: FESTIVAL_RED, bold: true };
+    if (info.solarTerm) return { text: info.solarTerm[0], color: TERM_GREEN, bold: true };
+    if (info.solarFestival) return { text: info.solarFestival[0], color: FESTIVAL_RED, bold: true };
+    return {
+      text: info.isFirstOfMonth ? info.monthName : info.dayName,
+      color: isToday ? '#5B4222' : 'text.secondary',
+      bold: false,
+    };
+  };
 
   return (
     <Box mt={6}>
-      <Paper elevation={8} sx={{ p: { xs: 2, sm: 4 }, borderRadius: 3, maxWidth: 600, mx: 'auto' }}>
+      <Paper
+        elevation={8}
+        sx={{ p: { xs: 2, sm: 4 }, borderRadius: 3, maxWidth: 600, mx: 'auto', overflow: 'hidden' }}
+      >
         <Stack spacing={2} alignItems="center" width="100%">
           {/* Month navigation */}
           <Stack direction="row" alignItems="center" justifyContent="center" spacing={1} width="100%">
@@ -142,7 +181,7 @@ const Calendar = () => {
             </Typography>
             <Select
               size="small"
-              value={viewingZone}
+              value={zone}
               onChange={(e) => setViewingZone(e.target.value)}
               aria-label="Viewing time zone"
               sx={{ fontWeight: 700, borderRadius: 3 }}
@@ -171,7 +210,7 @@ const Calendar = () => {
               const isToday = sameDay(cell.ymd, today);
               const isSelected = sameDay(cell.ymd, selected);
               const isWeekend = cell.date.getDay() === 0 || cell.date.getDay() === 6;
-              const festive = Boolean(cell.info.festival || cell.info.solarFestival);
+              const badge = cellBadge(cell.info, isToday);
               return (
                 <Box
                   component="button"
@@ -211,11 +250,11 @@ const Calendar = () => {
                     sx={{
                       fontSize: 11,
                       lineHeight: 1.1,
-                      color: festive ? '#C0392B' : isToday ? '#5B4222' : 'text.secondary',
-                      fontWeight: festive ? 700 : 400,
+                      color: badge.color,
+                      fontWeight: badge.bold ? 700 : 400,
                     }}
                   >
-                    {cellLunarText(cell.info)}
+                    {badge.text}
                   </Typography>
                 </Box>
               );
@@ -225,7 +264,7 @@ const Calendar = () => {
           {/* 万年历 — detail for the selected day */}
           <Paper
             elevation={2}
-            sx={{ p: 2, borderRadius: 4, bgcolor: 'background.default', width: '100%' }}
+            sx={{ p: 2, borderRadius: 3, bgcolor: 'background.default', width: '100%' }}
           >
             <Stack direction="row" spacing={2} alignItems="center">
               <Pudding size={64} sleeping={viewingAsleep} />
@@ -240,6 +279,11 @@ const Calendar = () => {
                   {selInfo.ganzhi}年 · 属{selInfo.zodiacZh}
                   {selInfo.zodiacEn ? ` (Year of the ${selInfo.zodiacEn})` : ''}
                 </Typography>
+                {selInfo.solarTerm && (
+                  <Typography variant="body2" sx={{ color: '#2E7D32', fontWeight: 700, mt: 0.5 }}>
+                    节气 {selInfo.solarTerm[0]} · {selInfo.solarTerm[1]}
+                  </Typography>
+                )}
                 {fest && (
                   <Typography variant="body2" sx={{ color: '#C0392B', fontWeight: 700, mt: 0.5 }}>
                     {selInfo.festival && `${selInfo.festival[0]} · ${selInfo.festival[1]}`}

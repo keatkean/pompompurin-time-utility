@@ -154,8 +154,8 @@ const Pomodoro = () => {
 
   return (
     <Box mt={6}>
-      <Paper elevation={8} sx={{ p: 5, borderRadius: 3, maxWidth: 600, mx: 'auto' }}>
-        <Stack spacing={4} alignItems="center">
+      <Paper elevation={8} sx={{ p: { xs: 2.5, sm: 5 }, borderRadius: 3, maxWidth: 600, mx: 'auto' }}>
+        <Stack spacing={{ xs: 3, sm: 4 }} alignItems="center">
           <Chip
             label={
               isActive || isPaused
@@ -174,11 +174,11 @@ const Pomodoro = () => {
             variant="h2"
             fontFamily="monospace"
             fontWeight="bold"
-            sx={{ textAlign: 'center', fontSize: 56, color: 'primary.main' }}
+            sx={{ textAlign: 'center', width: '100%', fontSize: 'clamp(2rem, 12vw, 3.5rem)', color: 'primary.main' }}
           >
             {formatDuration(displayTime)}
           </Typography>
-          <Stack direction="row" spacing={3} justifyContent="center">
+          <Stack direction="row" spacing={{ xs: 1.5, sm: 3 }} justifyContent="center" flexWrap="wrap" useFlexGap>
             <TextField
               label="Focus (min)"
               type="number"
@@ -198,7 +198,7 @@ const Pomodoro = () => {
               slotProps={{ htmlInput: { min: 1, max: 30 } }}
             />
           </Stack>
-          <Stack direction="row" spacing={3} justifyContent="center">
+          <Stack direction="row" spacing={{ xs: 1.5, sm: 3 }} justifyContent="center" flexWrap="wrap" useFlexGap>
             <Button variant="contained" onClick={handleStart} disabled={isActive}>
               {isPaused ? 'Resume' : 'Start'}
             </Button>

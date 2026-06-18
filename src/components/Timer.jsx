@@ -149,8 +149,8 @@ const Timer = () => {
 
   return (
     <Box mt={6}>
-      <Paper elevation={8} sx={{ p: 5, borderRadius: 3, maxWidth: 600, mx: 'auto' }}>
-        <Stack spacing={4} alignItems="center">
+      <Paper elevation={8} sx={{ p: { xs: 2.5, sm: 5 }, borderRadius: 3, maxWidth: 600, mx: 'auto' }}>
+        <Stack spacing={{ xs: 3, sm: 4 }} alignItems="center">
           {showWarning && (
             <Alert severity="warning" sx={{ fontWeight: 'bold', fontSize: 18 }}>
               Hurry up! Less than 10% time remaining.
@@ -174,7 +174,8 @@ const Timer = () => {
             fontWeight="bold"
             sx={{
               textAlign: 'center',
-              fontSize: 56,
+              width: '100%',
+              fontSize: 'clamp(2rem, 12vw, 3.5rem)',
               color: showWarning ? 'warning.main' : 'primary.main',
               transition: 'color 0.3s',
             }}
@@ -194,7 +195,7 @@ const Timer = () => {
               ))}
             </Stack>
           )}
-          <Stack direction="row" spacing={3} justifyContent="center">
+          <Stack direction="row" spacing={{ xs: 1.5, sm: 3 }} justifyContent="center" flexWrap="wrap" useFlexGap>
             {timeFields.map(({ label, value, setter, max }) => (
               <TextField
                 key={label}
@@ -208,7 +209,7 @@ const Timer = () => {
               />
             ))}
           </Stack>
-          <Stack direction="row" spacing={3} justifyContent="center">
+          <Stack direction="row" spacing={{ xs: 1.5, sm: 3 }} justifyContent="center" flexWrap="wrap" useFlexGap>
             <Button variant="contained" onClick={handleStart} disabled={isActive || displayTime <= 0}>
               {isPaused ? 'Resume' : 'Start'}
             </Button>
