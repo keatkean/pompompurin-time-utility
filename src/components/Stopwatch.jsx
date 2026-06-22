@@ -83,7 +83,7 @@ const Stopwatch = () => {
 
   return (
     <Box mt={6}>
-      <Paper elevation={8} sx={{ p: { xs: 2.5, sm: 5 }, borderRadius: 3, maxWidth: 600, mx: 'auto' }}>
+      <Paper elevation={8} sx={{ p: { xs: 2.5, sm: 5 }, borderRadius: 3, maxWidth: 600, mx: 'auto', overflow: 'hidden' }}>
         <Stack spacing={{ xs: 3, sm: 5 }} alignItems="center">
           {/* A living pudding that jiggles while the clock runs — and sleeps
               when it's stopped, so the Stopwatch shares the app's mascot. */}
@@ -119,7 +119,7 @@ const Stopwatch = () => {
             </Button>
           </Stack>
           {laps.length > 0 && (
-            <List sx={{ width: '100%', maxWidth: 420, mx: 'auto', borderRadius: 4, bgcolor: 'background.default' }}>
+            <List sx={{ width: '100%', maxWidth: 420, mx: 'auto', borderRadius: '20px', bgcolor: 'background.default', overflow: 'hidden' }}>
               {laps.map((lap, index) => {
                 const delta = lap - (index > 0 ? laps[index - 1] : 0);
                 return (
