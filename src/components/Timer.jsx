@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { TextField, Button, Typography, Stack, Paper, Box, Alert, Chip } from '@mui/material';
-import { formatDuration } from '../utils/formatTime';
+import { formatDuration, parseDuration } from '../utils/formatTime';
 import { initAudio, playCompletionSound, requestNotificationPermission, notify } from '../utils/alerts';
 import Pudding from './Pudding';
 import Sprinkles from './Sprinkles';
@@ -47,6 +47,7 @@ const Timer = () => {
   const [hours, setHours] = useState(0);
   const [minutes, setMinutes] = useState(0);
   const [seconds, setSeconds] = useState(0);
+  const [quickInput, setQuickInput] = useState('');
   const [isActive, setIsActive] = useState(Boolean(restored.running));
   const [timeLeft, setTimeLeft] = useState(restoredTimer?.remaining ?? 0);
   const [initialTime, setInitialTime] = useState(restoredTimer?.initialTime ?? 0);
@@ -141,6 +142,14 @@ const Timer = () => {
     setFinished(false);
   };
 
+  const handleQuickSet = () => {
+    const total = parseDuration(quickInput);
+    if (total && total > 0) {
+      applyPreset(total);
+      setQuickInput('');
+    }
+  };
+
   const timeFields = [
     { label: 'Hours', value: hours, setter: setHours, max: 99 },
     { label: 'Minutes', value: minutes, setter: setMinutes, max: 59 },
@@ -182,6 +191,23 @@ const Timer = () => {
           >
             {formatDuration(displayTime)}
           </Typography>
+          {!isActive && !isPaused && (
+            <Stack direction="row" spacing={1} justifyContent="center" alignItems="center" sx={{ width: '100%', maxWidth: 360 }}>
+              <TextField
+                size="small"
+                fullWidth
+                value={quickInput}
+                onChange={(e) => setQuickInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') handleQuickSet();
+                }}
+                label="Quick set — e.g. 25m, 1h30m, 90s"
+              />
+              <Button variant="contained" onClick={handleQuickSet} disabled={!quickInput.trim()} sx={{ minWidth: 64 }}>
+                Set
+              </Button>
+            </Stack>
+          )}
           {!isActive && !isPaused && (
             <Stack direction="row" spacing={1} justifyContent="center" flexWrap="wrap" useFlexGap>
               {PRESETS.map(({ label, seconds: presetSeconds }) => (

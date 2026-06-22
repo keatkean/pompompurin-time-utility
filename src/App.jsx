@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
-import { Container, Box, Tabs, Tab, CssBaseline, Paper, Typography, IconButton, Tooltip } from '@mui/material';
+import { Container, Box, Tabs, Tab, CssBaseline, Paper, Typography, IconButton, Tooltip, Snackbar } from '@mui/material';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import TimerIcon from '@mui/icons-material/Timer';
 import ShutterSpeedIcon from '@mui/icons-material/ShutterSpeed';
@@ -134,6 +134,7 @@ function initialMode() {
 function App() {
   const [value, setValue] = useState(0);
   const [mode, setMode] = useState(initialMode);
+  const [welcomeBack, setWelcomeBack] = useState(false);
   const theme = useMemo(() => makeTheme(mode), [mode]);
   const greeting = useMemo(() => GREETINGS[dayPhase(new Date().getHours())], []);
 
@@ -144,6 +145,21 @@ function App() {
       // Persisting the preference is best-effort.
     }
   }, [mode]);
+
+  // Greet the user when they return after stepping away for a while.
+  useEffect(() => {
+    let hiddenAt = null;
+    const onVisibility = () => {
+      if (document.visibilityState === 'hidden') {
+        hiddenAt = Date.now();
+      } else if (hiddenAt && Date.now() - hiddenAt > 60000) {
+        setWelcomeBack(true);
+        hiddenAt = null;
+      }
+    };
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => document.removeEventListener('visibilitychange', onVisibility);
+  }, []);
 
   const handleChange = (event, newValue) => {
     setValue(newValue);
@@ -219,6 +235,13 @@ function App() {
           </Typography>
         </Container>
       </Box>
+      <Snackbar
+        open={welcomeBack}
+        autoHideDuration={3500}
+        onClose={() => setWelcomeBack(false)}
+        message="Welcome back! Pompompurin missed you 🍮"
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      />
     </ThemeProvider>
   );
 }

@@ -14,9 +14,22 @@ import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import KeyboardDoubleArrowLeftIcon from '@mui/icons-material/KeyboardDoubleArrowLeft';
 import KeyboardDoubleArrowRightIcon from '@mui/icons-material/KeyboardDoubleArrowRight';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import { lunarInfo, utcNoon } from '../utils/lunar';
+import { lunarInfo, utcNoon, moonPhase, nextFullMoon } from '../utils/lunar';
+import { dailyFortune } from '../utils/fortune';
 import { getLocalHour, dayPhase } from '../utils/dayPhase';
 import Pudding from './Pudding';
+
+// A contextual accessory for the selected day: party hat on festivals, then a
+// seasonal touch (flower in spring, shades in summer, scarf in winter, beret
+// in autumn) — ties the 节气/seasons to the mascot.
+function accessoryFor(info, date) {
+  if (info.festival || info.solarFestival) return 'party';
+  const m = date.getMonth();
+  if (m >= 2 && m <= 4) return 'flower';
+  if (m >= 5 && m <= 7) return 'sunglasses';
+  if (m === 11 || m <= 1) return 'scarf';
+  return 'beret';
+}
 
 const STORAGE_KEY = 'worldClockTimeZones';
 const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -156,7 +169,11 @@ const Calendar = () => {
 
   // ---- Selected-day 万年历 detail ----
   const selDate = new Date(selected.year, selected.month, selected.day);
-  const selInfo = lunarInfo(utcNoon(selected.year, selected.month + 1, selected.day));
+  const selUtc = utcNoon(selected.year, selected.month + 1, selected.day);
+  const selInfo = lunarInfo(selUtc);
+  const selMoon = moonPhase(selUtc);
+  const selFullMoon = nextFullMoon(selUtc);
+  const selFortune = dailyFortune(selUtc);
   const selGregorian = selDate.toLocaleDateString('en-US', {
     weekday: 'long',
     month: 'long',
@@ -167,6 +184,7 @@ const Calendar = () => {
   const fest = selInfo.festival || selInfo.solarFestival;
   const viewingAsleep = dayPhase(getLocalHour(now, zone)) === 'night';
   const selectedIsToday = sameDay(selected, today);
+  const selAccessory = accessoryFor(selInfo, selDate);
 
   const FESTIVAL_RED = '#C0392B';
   const TERM_GREEN = '#2E7D32';
@@ -334,10 +352,12 @@ const Calendar = () => {
           {/* 万年历 — detail for the selected day */}
           <Paper
             elevation={2}
-            sx={{ p: 2, borderRadius: 3, bgcolor: 'background.default', width: '100%' }}
+            sx={{ p: 2.5, borderRadius: '18px', bgcolor: 'background.default', width: '100%' }}
           >
             <Stack direction="row" spacing={2} alignItems="center">
-              <Pudding size={64} sleeping={viewingAsleep} />
+              <Box sx={{ flexShrink: 0 }}>
+                <Pudding size={60} sleeping={viewingAsleep} accessory={selAccessory} />
+              </Box>
               <Box sx={{ minWidth: 0 }}>
                 <Typography sx={{ fontWeight: 700, color: 'text.primary' }}>
                   {selGregorian}
@@ -363,6 +383,17 @@ const Calendar = () => {
                 )}
               </Box>
             </Stack>
+
+            {/* Moon phase (from the lunar day) + fortune — a cute mini-almanac */}
+            <Box sx={{ mt: 1.5, pt: 1.5, borderTop: '1px solid rgba(166,124,82,0.25)' }}>
+              <Typography variant="body2" color="text.secondary">
+                {selMoon.emoji} {selMoon.zh} {selMoon.en}
+                {!selMoon.isFull && selFullMoon ? ` · 满月 Full moon in ${selFullMoon.daysUntil}d` : ''}
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 0.25 }}>
+                🥠 宜 {selFortune.lucky[0]} {selFortune.lucky[1]} · 忌 {selFortune.avoid[0]} {selFortune.avoid[1]}
+              </Typography>
+            </Box>
 
             {/* Around the world — only meaningful for "now" */}
             {selectedIsToday && zoneOptions.length > 1 && (

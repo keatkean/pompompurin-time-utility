@@ -31,6 +31,19 @@ body {
   100% { transform: translate(var(--tx), var(--ty)) rotate(var(--rot)); opacity: 0; }
 }
 
+/* Box-breathing guide: the pudding swells on the inhale, shrinks on the exhale.
+   8s loop = 4s in, 4s out, matching the label that flips every 4s. */
+@keyframes pudding-breathe {
+  0% { transform: scale(0.82); }
+  50% { transform: scale(1.18); }
+  100% { transform: scale(0.82); }
+}
+
+.pudding-breathe {
+  animation: pudding-breathe 8s ease-in-out infinite;
+  transform-origin: 50% 100%;
+}
+
 .pudding-wobble {
   animation: pudding-wobble 0.5s ease-in-out infinite;
   transform-origin: 50% 90%;
@@ -59,7 +72,8 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .pudding-wobble,
   .pudding-bounce,
-  .pudding-jiggle {
+  .pudding-jiggle,
+  .pudding-breathe {
     animation: none;
   }
   .sprinkle {

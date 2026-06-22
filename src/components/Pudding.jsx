@@ -10,17 +10,73 @@ const PUDDING_FLAVORS = {
   chocolate: { body: '#C9A27A', stroke: '#8A5A2B', cap: '#5B3A1E' },
 };
 
+// Little accessories the pudding can wear (drawn on top, never clipped) — used
+// to give it moods/seasons: a beret, a spring flower, a winter scarf, a party
+// hat for festivals, summer sunglasses.
+const Accessory = ({ kind }) => {
+  switch (kind) {
+    case 'beret':
+      return (
+        <g>
+          <ellipse cx="60" cy="28" rx="25" ry="8" fill="#8A5A2B" />
+          <ellipse cx="60" cy="26" rx="18" ry="5" fill="#A67C52" />
+          <circle cx="60" cy="20" r="3.2" fill="#8A5A2B" />
+        </g>
+      );
+    case 'flower':
+      return (
+        <g transform="translate(80, 27)">
+          {[-90, -18, 54, 126, 198].map((deg) => (
+            <circle
+              key={deg}
+              cx={6 * Math.cos((deg * Math.PI) / 180)}
+              cy={6 * Math.sin((deg * Math.PI) / 180)}
+              r="4"
+              fill="#FFB6C1"
+            />
+          ))}
+          <circle cx="0" cy="0" r="3" fill="#FFD700" />
+        </g>
+      );
+    case 'scarf':
+      return (
+        <g>
+          <path d="M 30 80 Q 60 90 90 80 L 90 87 Q 60 97 30 87 Z" fill="#E26D8A" />
+          <path d="M 82 84 L 90 100 L 80 98 L 76 85 Z" fill="#C75C7A" />
+        </g>
+      );
+    case 'party':
+      return (
+        <g>
+          <path d="M 60 6 L 49 30 L 71 30 Z" fill="#FFB6C1" stroke="#E8A8B8" strokeWidth="1.5" />
+          <circle cx="60" cy="6" r="3.4" fill="#FFD700" />
+        </g>
+      );
+    case 'sunglasses':
+      return (
+        <g fill="#3A3A3A">
+          <rect x="39" y="63" width="17" height="10" rx="3.5" />
+          <rect x="64" y="63" width="17" height="10" rx="3.5" />
+          <rect x="56" y="66" width="8" height="3" />
+        </g>
+      );
+    default:
+      return null;
+  }
+};
+
 // Pompompurin-style flan. `fraction` (0..1) controls how much pudding is
 // left on the plate — the body is clipped from the top down as it gets
 // "eaten". `sleeping` swaps the eyes for closed lids. `flavor` recolors the
 // flan; `golden` is kept as a shorthand for the golden reward sticker and
-// takes precedence over `flavor`.
+// takes precedence over `flavor`. `accessory` adds a hat/flower/etc on top.
 const Pudding = ({
   fraction = 1,
   size = 120,
   sleeping = false,
   golden = false,
   flavor = 'classic',
+  accessory,
   className,
 }) => {
   const f = Math.max(0, Math.min(1, fraction));
@@ -79,6 +135,8 @@ const Pudding = ({
           </>
         )}
       </g>
+      {/* Accessory sits on top, outside the "eaten" clip so it always shows. */}
+      <Accessory kind={accessory} />
     </svg>
   );
 };

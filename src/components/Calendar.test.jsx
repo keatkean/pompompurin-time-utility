@@ -62,6 +62,13 @@ describe('Calendar', () => {
     expect(screen.getByText('March 1988')).toBeInTheDocument();
   });
 
+  it('shows the moon phase and a daily fortune in the detail card', () => {
+    render(<Calendar />);
+    // The fortune line (🥠) and a moon-phase glyph always render for the day.
+    expect(screen.getByText(/🥠/)).toBeInTheDocument();
+    expect(screen.getByText(/🌑|🌒|🌓|🌔|🌕|🌖|🌗|🌘/)).toBeInTheDocument();
+  });
+
   it('reacts when the World Clock zone list changes', () => {
     localStorage.setItem(
       'worldClockTimeZones',

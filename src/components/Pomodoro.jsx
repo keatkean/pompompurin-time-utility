@@ -4,6 +4,7 @@ import { formatDuration } from '../utils/formatTime';
 import { initAudio, playCompletionSound, requestNotificationPermission, notify } from '../utils/alerts';
 import Pudding from './Pudding';
 import Sprinkles from './Sprinkles';
+import BreathingPudding from './BreathingPudding';
 
 const SESSION_KEY = 'pompompurinPomodoroSession';
 const STICKERS_KEY = 'pompompurinPomodoroStickers';
@@ -60,6 +61,7 @@ const Pomodoro = () => {
   const [stickers, setStickers] = useState(loadStickers);
   // Bumped on each live focus completion to replay the sprinkle burst.
   const [celebrate, setCelebrate] = useState(0);
+  const [breathing, setBreathing] = useState(false);
   const endTimeRef = useRef(restored?.endTime ?? 0);
 
   useEffect(() => {
@@ -209,6 +211,10 @@ const Pomodoro = () => {
               Reset
             </Button>
           </Stack>
+          <Button variant="text" onClick={() => setBreathing((b) => !b)} sx={{ color: 'text.secondary' }}>
+            {breathing ? 'Hide breathing 🫧' : 'Take a breath 🫧'}
+          </Button>
+          {breathing && <BreathingPudding />}
           <Box width="100%" maxWidth={480}>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 1, textAlign: 'left', fontSize: 16 }}>
               Pudding stickers — {stickers} collected{goldenSets > 0 ? ` · ${goldenSets} golden` : ''}

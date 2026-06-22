@@ -37,6 +37,13 @@ describe('Timer', () => {
     expect(minutes).toHaveValue(0);
   });
 
+  it('accepts a natural-language quick set', () => {
+    render(<Timer />);
+    fireEvent.change(screen.getByLabelText(/Quick set/), { target: { value: '1h30m' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Set' }));
+    expect(screen.getByText('01:30:00')).toBeInTheDocument();
+  });
+
   it('does not start when no time is set', () => {
     render(<Timer />);
     expect(screen.getByRole('button', { name: 'Start' })).toBeDisabled();

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { lunarInfo, utcNoon, solarTermOn } from './lunar';
+import { lunarInfo, utcNoon, solarTermOn, moonPhase, nextFullMoon } from './lunar';
 
 describe('lunar (万年历)', () => {
   it('identifies Chinese New Year 2026 (lunar 正月初一, 丙午 Year of the Horse)', () => {
@@ -53,5 +53,25 @@ describe('lunar (万年历)', () => {
   it('returns no solar term on an ordinary day', () => {
     expect(solarTermOn(2026, 6, 18)).toBeUndefined();
     expect(lunarInfo(utcNoon(2026, 6, 21)).solarTerm).toEqual(['夏至', 'Summer Solstice']);
+  });
+
+  it('derives the moon phase from the lunar day', () => {
+    // 正月初一 = new moon, 八月十五 (Mid-Autumn) = full moon.
+    const newMoon = moonPhase(utcNoon(2026, 2, 17));
+    expect(newMoon.zh).toBe('新月');
+    expect(newMoon.isFull).toBe(false);
+
+    const full = moonPhase(utcNoon(2026, 9, 25));
+    expect(full.zh).toBe('满月');
+    expect(full.isFull).toBe(true);
+    expect(full.emoji).toBe('🌕');
+  });
+
+  it('counts down to the next full moon', () => {
+    // Mid-Autumn 2026 (八月十五) is a full moon, so from that day it is 0.
+    expect(nextFullMoon(utcNoon(2026, 9, 25)).daysUntil).toBe(0);
+    // A few days earlier, the next 十五 is that same Mid-Autumn day.
+    const ahead = nextFullMoon(utcNoon(2026, 9, 20));
+    expect(ahead.daysUntil).toBe(5);
   });
 });

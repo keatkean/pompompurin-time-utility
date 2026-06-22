@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatDuration, formatStopwatch } from './formatTime';
+import { formatDuration, formatStopwatch, parseDuration } from './formatTime';
 
 describe('formatDuration', () => {
   it('formats zero', () => {
@@ -23,5 +23,27 @@ describe('formatStopwatch', () => {
     expect(formatStopwatch(999)).toBe('00:00:00.99');
     expect(formatStopwatch(61239)).toBe('00:01:01.23');
     expect(formatStopwatch(3600000)).toBe('01:00:00.00');
+  });
+});
+
+describe('parseDuration', () => {
+  it('treats a bare number as minutes', () => {
+    expect(parseDuration('25')).toBe(25 * 60);
+    expect(parseDuration(' 5 ')).toBe(5 * 60);
+  });
+
+  it('parses unit strings', () => {
+    expect(parseDuration('90s')).toBe(90);
+    expect(parseDuration('5m')).toBe(300);
+    expect(parseDuration('1h')).toBe(3600);
+    expect(parseDuration('1h30m')).toBe(5400);
+    expect(parseDuration('1h 30m 10s')).toBe(5410);
+  });
+
+  it('clamps to the timer maximum and rejects nonsense', () => {
+    expect(parseDuration('999h')).toBe(99 * 3600 + 59 * 60 + 59);
+    expect(parseDuration('banana')).toBeNull();
+    expect(parseDuration('')).toBeNull();
+    expect(parseDuration(null)).toBeNull();
   });
 });

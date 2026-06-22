@@ -67,6 +67,12 @@ describe('Pomodoro', () => {
     expect(screen.getByRole('button', { name: 'Pause' })).toBeEnabled();
   });
 
+  it('reveals the breathing guide on demand', () => {
+    render(<Pomodoro />);
+    fireEvent.click(screen.getByRole('button', { name: /Take a breath/ }));
+    expect(screen.getByText(/Breathe in/)).toBeInTheDocument();
+  });
+
   it('clamps the focus and break inputs', () => {
     render(<Pomodoro />);
     const focus = screen.getByLabelText('Focus (min)');

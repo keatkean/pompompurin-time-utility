@@ -124,6 +124,36 @@ export function utcNoon(year, month, day) {
   return new Date(Date.UTC(year, month - 1, day, 12));
 }
 
+// --- Moon phase (free from the lunar date) ---
+// The 农历 day IS essentially the Moon's age: 初一 ≈ new moon, 十五 ≈ full moon.
+// So a cute, correct moon phase falls straight out of the data we already have.
+export function moonPhase(date) {
+  const { day } = chineseParts(date);
+  let zh, en, emoji;
+  if (day === 1) [zh, en, emoji] = ['新月', 'New Moon', '🌑'];
+  else if (day <= 6) [zh, en, emoji] = ['蛾眉月', 'Waxing Crescent', '🌒'];
+  else if (day <= 9) [zh, en, emoji] = ['上弦月', 'First Quarter', '🌓'];
+  else if (day <= 14) [zh, en, emoji] = ['盈凸月', 'Waxing Gibbous', '🌔'];
+  else if (day <= 16) [zh, en, emoji] = ['满月', 'Full Moon', '🌕'];
+  else if (day <= 22) [zh, en, emoji] = ['亏凸月', 'Waning Gibbous', '🌖'];
+  else if (day <= 24) [zh, en, emoji] = ['下弦月', 'Last Quarter', '🌗'];
+  else [zh, en, emoji] = ['残月', 'Waning Crescent', '🌘'];
+  return { day, zh, en, emoji, isFull: day === 15 || day === 16 };
+}
+
+// Days until the next 农历十五 (full moon) on or after `date` (a utcNoon Date).
+// Returns { date, daysUntil } or null. daysUntil 0 means tonight.
+export function nextFullMoon(date) {
+  const y = date.getUTCFullYear();
+  const m = date.getUTCMonth() + 1;
+  const d = date.getUTCDate();
+  for (let i = 0; i <= 40; i += 1) {
+    const probe = utcNoon(y, m, d + i); // Date.UTC normalizes day overflow
+    if (chineseParts(probe).day === 15) return { date: probe, daysUntil: i };
+  }
+  return null;
+}
+
 // Full 万年历 info for the Gregorian day represented by `date` (use utcNoon()).
 export function lunarInfo(date) {
   const { monthNum, isLeap, day, ganzhi, branch, relatedYear } = chineseParts(date);
