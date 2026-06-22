@@ -11,13 +11,25 @@ import {
 } from '@mui/material';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import KeyboardDoubleArrowLeftIcon from '@mui/icons-material/KeyboardDoubleArrowLeft';
+import KeyboardDoubleArrowRightIcon from '@mui/icons-material/KeyboardDoubleArrowRight';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { lunarInfo, utcNoon } from '../utils/lunar';
 import { getLocalHour, dayPhase } from '../utils/dayPhase';
 import Pudding from './Pudding';
 
 const STORAGE_KEY = 'worldClockTimeZones';
 const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const MONTHS_SHORT = Array.from({ length: 12 }, (_, i) =>
+  new Date(2000, i, 1).toLocaleDateString('en-US', { month: 'short' })
+);
 const localZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+// The lunar conversion (ICU) is reliable across this range, which also covers
+// any birth year someone would look up.
+const MIN_YEAR = 1900;
+const MAX_YEAR = 2100;
+const clampYear = (y) => Math.min(MAX_YEAR, Math.max(MIN_YEAR, y));
 
 // The y/m/d (0-based month) that `instant` falls on in a given zone — this is
 // what makes the calendar "world": near midnight the day differs by zone.
@@ -51,6 +63,8 @@ const Calendar = () => {
     return { year: t.year, month: t.month };
   });
   const [selected, setSelected] = useState(() => dateInZone(new Date(), localZone));
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [pickerYear, setPickerYear] = useState(() => dateInZone(new Date(), localZone).year);
 
   // A minute's resolution is plenty for a calendar — enough to roll over at
   // midnight and keep the "current date per zone" line fresh.
@@ -116,6 +130,23 @@ const Calendar = () => {
   const goToday = () => {
     setView({ year: today.year, month: today.month });
     setSelected(today);
+    setPickerOpen(false);
+  };
+
+  // Fast jump: clicking the title opens a year/month picker so reaching, say,
+  // 1988 takes a few clicks instead of hundreds of month steps.
+  const togglePicker = () => {
+    if (pickerOpen) {
+      setPickerOpen(false);
+    } else {
+      setPickerYear(view.year);
+      setPickerOpen(true);
+    }
+  };
+  const stepYear = (delta) => setPickerYear((y) => clampYear(y + delta));
+  const pickMonth = (month) => {
+    setView({ year: pickerYear, month });
+    setPickerOpen(false);
   };
 
   const monthLabel = new Date(view.year, view.month, 1).toLocaleDateString('en-US', {
@@ -163,9 +194,14 @@ const Calendar = () => {
             <IconButton onClick={() => goMonth(-1)} aria-label="Previous month" sx={{ color: 'primary.main' }}>
               <ChevronLeftIcon />
             </IconButton>
-            <Typography variant="h5" sx={{ fontWeight: 700, color: 'primary.main', minWidth: 180, textAlign: 'center' }}>
+            <Button
+              onClick={togglePicker}
+              endIcon={<ExpandMoreIcon />}
+              aria-expanded={pickerOpen}
+              sx={{ minWidth: 170, color: 'primary.main', fontWeight: 700, fontSize: '1.25rem', textTransform: 'none' }}
+            >
               {monthLabel}
-            </Typography>
+            </Button>
             <IconButton onClick={() => goMonth(1)} aria-label="Next month" sx={{ color: 'primary.main' }}>
               <ChevronRightIcon />
             </IconButton>
@@ -194,7 +230,40 @@ const Calendar = () => {
             </Select>
           </Stack>
 
-          {/* Weekday header */}
+          {/* Year/month jump picker, or the day grid */}
+          {pickerOpen ? (
+            <Box width="100%">
+              <Stack direction="row" alignItems="center" justifyContent="center" spacing={0.5} sx={{ mb: 1.5 }}>
+                <IconButton size="small" aria-label="Previous decade" onClick={() => stepYear(-10)} sx={{ color: 'primary.main' }}>
+                  <KeyboardDoubleArrowLeftIcon />
+                </IconButton>
+                <IconButton size="small" aria-label="Previous year" onClick={() => stepYear(-1)} sx={{ color: 'primary.main' }}>
+                  <ChevronLeftIcon />
+                </IconButton>
+                <Typography sx={{ fontWeight: 700, fontSize: '1.25rem', color: 'primary.main', minWidth: 80, textAlign: 'center' }}>
+                  {pickerYear}
+                </Typography>
+                <IconButton size="small" aria-label="Next year" onClick={() => stepYear(1)} sx={{ color: 'primary.main' }}>
+                  <ChevronRightIcon />
+                </IconButton>
+                <IconButton size="small" aria-label="Next decade" onClick={() => stepYear(10)} sx={{ color: 'primary.main' }}>
+                  <KeyboardDoubleArrowRightIcon />
+                </IconButton>
+              </Stack>
+              <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 1, width: '100%' }}>
+                {MONTHS_SHORT.map((mn, i) => (
+                  <Button
+                    key={mn}
+                    onClick={() => pickMonth(i)}
+                    variant={pickerYear === view.year && i === view.month ? 'contained' : 'outlined'}
+                    sx={{ minWidth: 0 }}
+                  >
+                    {mn}
+                  </Button>
+                ))}
+              </Box>
+            </Box>
+          ) : (
           <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', width: '100%', gap: 0.5 }}>
             {WEEKDAYS.map((w) => (
               <Typography
@@ -260,6 +329,7 @@ const Calendar = () => {
               );
             })}
           </Box>
+          )}
 
           {/* 万年历 — detail for the selected day */}
           <Paper

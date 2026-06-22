@@ -47,6 +47,21 @@ describe('Calendar', () => {
     expect(screen.getByText(/节气 夏至/)).toBeInTheDocument();
   });
 
+  it('jumps to a distant year via the title picker', () => {
+    render(<Calendar />);
+    fireEvent.click(screen.getByRole('button', { name: /June 2026/ }));
+
+    // 2026 → 1986 (four decades back), then +1 twice → 1988.
+    const back10 = screen.getByRole('button', { name: 'Previous decade' });
+    for (let i = 0; i < 4; i += 1) fireEvent.click(back10);
+    const up1 = screen.getByRole('button', { name: 'Next year' });
+    fireEvent.click(up1);
+    fireEvent.click(up1);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Mar' }));
+    expect(screen.getByText('March 1988')).toBeInTheDocument();
+  });
+
   it('reacts when the World Clock zone list changes', () => {
     localStorage.setItem(
       'worldClockTimeZones',
