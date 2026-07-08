@@ -52,7 +52,17 @@ export function requestNotificationPermission() {
 }
 
 export function notify(title) {
-  if ('Notification' in window && Notification.permission === 'granted') {
+  if (!('Notification' in window) || Notification.permission !== 'granted') return;
+  try {
     new Notification(title);
+  } catch {
+    // Some platforms (notably Android Chrome) forbid page-context Notification
+    // construction and throw — notifications there must go through the service
+    // worker registration. Callers rely on notify() never throwing.
+    try {
+      navigator.serviceWorker?.ready.then((reg) => reg.showNotification(title)).catch(() => {});
+    } catch {
+      // No notification channel available — the sound already played.
+    }
   }
 }

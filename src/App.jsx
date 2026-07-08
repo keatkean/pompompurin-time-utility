@@ -13,6 +13,7 @@ import Timer from './components/Timer';
 import Stopwatch from './components/Stopwatch';
 import Pomodoro from './components/Pomodoro';
 import Calendar from './components/Calendar';
+import ErrorBoundary from './components/ErrorBoundary';
 import { dayPhase } from './utils/dayPhase';
 
 const THEME_KEY = 'pompompurinThemeMode';
@@ -118,6 +119,8 @@ const GREETINGS = {
   night: "Shh… Pompompurin's sleepy 🌙",
 };
 
+const currentGreeting = () => GREETINGS[dayPhase(new Date().getHours())];
+
 function initialMode() {
   try {
     const saved = localStorage.getItem(THEME_KEY);
@@ -135,8 +138,8 @@ function App() {
   const [value, setValue] = useState(0);
   const [mode, setMode] = useState(initialMode);
   const [welcomeBack, setWelcomeBack] = useState(false);
+  const [greeting, setGreeting] = useState(currentGreeting);
   const theme = useMemo(() => makeTheme(mode), [mode]);
-  const greeting = useMemo(() => GREETINGS[dayPhase(new Date().getHours())], []);
 
   useEffect(() => {
     try {
@@ -146,16 +149,20 @@ function App() {
     }
   }, [mode]);
 
-  // Greet the user when they return after stepping away for a while.
+  // Greet the user when they return after stepping away for a while — and
+  // refresh the time-of-day greeting, which may have gone stale while hidden.
   useEffect(() => {
     let hiddenAt = null;
     const onVisibility = () => {
       if (document.visibilityState === 'hidden') {
         hiddenAt = Date.now();
-      } else if (hiddenAt && Date.now() - hiddenAt > 60000) {
-        setWelcomeBack(true);
-        hiddenAt = null;
+        return;
       }
+      setGreeting(currentGreeting());
+      if (hiddenAt && Date.now() - hiddenAt > 60000) {
+        setWelcomeBack(true);
+      }
+      hiddenAt = null;
     };
     document.addEventListener('visibilitychange', onVisibility);
     return () => document.removeEventListener('visibilitychange', onVisibility);
@@ -210,21 +217,23 @@ function App() {
             </Tabs>
           </Paper>
           <Box display="flex" flexDirection="column" alignItems="center" justifyContent="center" minHeight={420}>
-            <Box sx={{ display: value === 0 ? 'block' : 'none', width: '100%' }}>
-              <WorldClock />
-            </Box>
-            <Box sx={{ display: value === 1 ? 'block' : 'none', width: '100%' }}>
-              <Calendar />
-            </Box>
-            <Box sx={{ display: value === 2 ? 'block' : 'none', width: '100%' }}>
-              <Timer />
-            </Box>
-            <Box sx={{ display: value === 3 ? 'block' : 'none', width: '100%' }}>
-              <Stopwatch />
-            </Box>
-            <Box sx={{ display: value === 4 ? 'block' : 'none', width: '100%' }}>
-              <Pomodoro />
-            </Box>
+            <ErrorBoundary>
+              <Box sx={{ display: value === 0 ? 'block' : 'none', width: '100%' }}>
+                <WorldClock />
+              </Box>
+              <Box sx={{ display: value === 1 ? 'block' : 'none', width: '100%' }}>
+                <Calendar />
+              </Box>
+              <Box sx={{ display: value === 2 ? 'block' : 'none', width: '100%' }}>
+                <Timer />
+              </Box>
+              <Box sx={{ display: value === 3 ? 'block' : 'none', width: '100%' }}>
+                <Stopwatch />
+              </Box>
+              <Box sx={{ display: value === 4 ? 'block' : 'none', width: '100%' }}>
+                <Pomodoro />
+              </Box>
+            </ErrorBoundary>
           </Box>
           <Typography
             variant="caption"

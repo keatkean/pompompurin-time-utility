@@ -17,20 +17,33 @@ export const timeZoneNames =
 
 export const cityFromTimeZone = (timeZone) => timeZone.split('/').pop().replaceAll('_', ' ');
 
+// Formatter construction is the expensive part of Intl, and the World Clock
+// refreshes offsets/times for every IANA zone once a minute — so formatters are
+// cached per zone and only the (cheap) formatting is paid per refresh.
+const wallClockFormatters = new Map();
+function wallClockFormatter(timeZone) {
+  let fmt = wallClockFormatters.get(timeZone);
+  if (!fmt) {
+    fmt = new Intl.DateTimeFormat('en-US', {
+      timeZone,
+      hourCycle: 'h23',
+      year: 'numeric',
+      month: 'numeric',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: 'numeric',
+      second: 'numeric',
+    });
+    wallClockFormatters.set(timeZone, fmt);
+  }
+  return fmt;
+}
+
 // A zone's current UTC offset in minutes, derived by comparing its wall-clock
 // reading of `date` against UTC. Avoids the newer `shortOffset` formatter, so it
 // works wherever Intl time zones do.
 export function getOffsetMinutes(timeZone, date) {
-  const parts = new Intl.DateTimeFormat('en-US', {
-    timeZone,
-    hourCycle: 'h23',
-    year: 'numeric',
-    month: 'numeric',
-    day: 'numeric',
-    hour: 'numeric',
-    minute: 'numeric',
-    second: 'numeric',
-  })
+  const parts = wallClockFormatter(timeZone)
     .formatToParts(date)
     .reduce((acc, part) => ((acc[part.type] = part.value), acc), {});
   const asUTC = Date.UTC(
@@ -42,6 +55,18 @@ export function getOffsetMinutes(timeZone, date) {
     Number(parts.second)
   );
   return Math.round((asUTC - date.getTime()) / 60000);
+}
+
+// Short "3:24 PM" wall-clock label for a zone, with the formatter cached per
+// zone (used by the picker's per-minute refresh across all zones).
+const timeLabelFormatters = new Map();
+export function formatZoneTime(timeZone, date) {
+  let fmt = timeLabelFormatters.get(timeZone);
+  if (!fmt) {
+    fmt = new Intl.DateTimeFormat('en-US', { timeZone, hour: 'numeric', minute: '2-digit', hour12: true });
+    timeLabelFormatters.set(timeZone, fmt);
+  }
+  return fmt.format(date);
 }
 
 export function formatOffset(minutes) {

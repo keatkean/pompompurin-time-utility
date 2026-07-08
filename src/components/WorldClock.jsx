@@ -16,7 +16,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import Snackbar from '@mui/material/Snackbar';
 import { getLocalHour, dayPhase, isPoliteHour, PHASE_STYLES } from '../utils/dayPhase';
-import { TZ_OPTIONS, cityFromTimeZone, getOffsetMinutes, formatOffset } from '../utils/timezones';
+import { TZ_OPTIONS, cityFromTimeZone, getOffsetMinutes, formatOffset, formatZoneTime } from '../utils/timezones';
 import Pudding from './Pudding';
 
 const STORAGE_KEY = 'worldClockTimeZones';
@@ -137,12 +137,7 @@ const WorldClock = () => {
     for (const opt of TZ_OPTIONS) {
       map.set(opt.timeZone, {
         offsetLabel: formatOffset(getOffsetMinutes(opt.timeZone, at)),
-        timeLabel: at.toLocaleTimeString('en-US', {
-          timeZone: opt.timeZone,
-          hour: 'numeric',
-          minute: '2-digit',
-          hour12: true,
-        }),
+        timeLabel: formatZoneTime(opt.timeZone, at),
       });
     }
     return map;

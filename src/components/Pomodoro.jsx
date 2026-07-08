@@ -31,10 +31,26 @@ function loadStickers() {
 }
 
 // Like the Timer, a running session persists its absolute end timestamp so a
-// refresh resumes mid-focus or mid-break.
+// refresh resumes mid-focus or mid-break; a paused session persists its frozen
+// remaining time instead (the end timestamp is recomputed on resume).
 function loadSession() {
   try {
     const saved = JSON.parse(localStorage.getItem(SESSION_KEY));
+    if (
+      saved &&
+      saved.paused &&
+      typeof saved.remaining === 'number' &&
+      saved.remaining > 0 &&
+      (saved.phase === 'focus' || saved.phase === 'break')
+    ) {
+      return {
+        paused: true,
+        remaining: saved.remaining,
+        phase: saved.phase,
+        focusMinutes: saved.focusMinutes,
+        breakMinutes: saved.breakMinutes,
+      };
+    }
     if (saved && typeof saved.endTime === 'number' && (saved.phase === 'focus' || saved.phase === 'break')) {
       const remaining = Math.ceil((saved.endTime - Date.now()) / 1000);
       if (remaining > 0) return { ...saved, remaining };
@@ -56,13 +72,16 @@ const Pomodoro = () => {
   const [focusMinutes, setFocusMinutes] = useState(restored?.focusMinutes ?? 25);
   const [breakMinutes, setBreakMinutes] = useState(restored?.breakMinutes ?? 5);
   const [phase, setPhase] = useState(restored?.phase ?? 'focus');
-  const [isActive, setIsActive] = useState(Boolean(restored?.remaining));
+  const [isActive, setIsActive] = useState(Boolean(restored?.remaining && !restored.paused));
   const [timeLeft, setTimeLeft] = useState(restored?.remaining ?? 0);
   const [stickers, setStickers] = useState(loadStickers);
   // Bumped on each live focus completion to replay the sprinkle burst.
   const [celebrate, setCelebrate] = useState(0);
   const [breathing, setBreathing] = useState(false);
   const endTimeRef = useRef(restored?.endTime ?? 0);
+  // Guards the completion branch so it runs at most once per countdown (an
+  // extra tick can land at remaining===0 before React tears down the interval).
+  const firedRef = useRef(false);
 
   useEffect(() => {
     localStorage.setItem(STICKERS_KEY, JSON.stringify(stickers));
@@ -84,6 +103,8 @@ const Pomodoro = () => {
       const remaining = Math.max(0, Math.ceil((endTimeRef.current - Date.now()) / 1000));
       setTimeLeft(remaining);
       if (remaining > 0) return;
+      if (firedRef.current) return;
+      firedRef.current = true;
       playCompletionSound();
       if (phase === 'focus') {
         // Focus complete: earn a sticker and roll straight into the break.
@@ -93,6 +114,7 @@ const Pomodoro = () => {
         const total = breakMinutes * 60;
         const endTime = Date.now() + total * 1000;
         endTimeRef.current = endTime;
+        firedRef.current = false; // the break countdown gets its own completion
         setPhase('break');
         setTimeLeft(total);
         localStorage.setItem(SESSION_KEY, JSON.stringify({ endTime, phase: 'break', focusMinutes, breakMinutes }));
@@ -129,6 +151,7 @@ const Pomodoro = () => {
     if (isPaused) {
       const endTime = Date.now() + timeLeft * 1000;
       endTimeRef.current = endTime;
+      firedRef.current = false;
       setIsActive(true);
       localStorage.setItem(SESSION_KEY, JSON.stringify({ endTime, phase, focusMinutes, breakMinutes }));
       return;
@@ -136,6 +159,7 @@ const Pomodoro = () => {
     const total = focusMinutes * 60;
     const endTime = Date.now() + total * 1000;
     endTimeRef.current = endTime;
+    firedRef.current = false;
     setPhase('focus');
     setTimeLeft(total);
     setIsActive(true);
@@ -144,7 +168,12 @@ const Pomodoro = () => {
 
   const handlePause = () => {
     setIsActive(false);
-    localStorage.removeItem(SESSION_KEY);
+    // Persist the frozen remaining time so a paused session survives a refresh
+    // (same contract as the Timer).
+    localStorage.setItem(
+      SESSION_KEY,
+      JSON.stringify({ paused: true, remaining: timeLeft, phase, focusMinutes, breakMinutes })
+    );
   };
 
   const handleReset = () => {
