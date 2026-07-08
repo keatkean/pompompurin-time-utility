@@ -9,6 +9,11 @@ import '@fontsource/quicksand/latin-400.css';
 import '@fontsource/quicksand/latin-700.css';
 import './index.css';
 
+// Build identity in the console too, for quick "which build am I on?" checks.
+console.info(
+  `Pompompurin Time Utility v${import.meta.env.APP_VERSION} (${import.meta.env.APP_COMMIT}, built ${import.meta.env.APP_BUILD_TIME})`
+);
+
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <App />

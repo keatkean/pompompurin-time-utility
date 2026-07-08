@@ -1,10 +1,34 @@
+import { readFileSync } from 'node:fs'
+import { execSync } from 'node:child_process'
+import process from 'node:process'
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 
+const pkg = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf8'))
+
+// Short commit hash baked into the build so the deployed footer identifies
+// exactly which commit is live (the PWA can serve a cached older build, so
+// "is this the latest?" must be answerable from the page itself).
+function commitHash() {
+  try {
+    return execSync('git rev-parse --short HEAD').toString().trim()
+  } catch {
+    // No git (e.g. a bare source download) — CI still provides the SHA.
+    return process.env.GITHUB_SHA?.slice(0, 7) ?? 'dev'
+  }
+}
+
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => ({
   base: '/pompompurin-time-utility/',
+  define: {
+    'import.meta.env.APP_VERSION': JSON.stringify(pkg.version),
+    'import.meta.env.APP_COMMIT': JSON.stringify(commitHash()),
+    'import.meta.env.APP_BUILD_TIME': JSON.stringify(
+      new Date().toISOString().slice(0, 16).replace('T', ' ') + ' UTC'
+    ),
+  },
   plugins: [
     react(),
     VitePWA({

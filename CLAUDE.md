@@ -26,6 +26,12 @@ npm run build      # vite build (PWA disabled in test mode)
 CI (`.github/workflows/deploy.yml`) builds, tests, and deploys to GitHub Pages
 on every push to `main`.
 
+**Build identity**: `vite.config.js` injects `import.meta.env.APP_VERSION`
+(from `package.json`), `APP_COMMIT` (short git hash), and `APP_BUILD_TIME` at
+build time; the footer and a console line display them so a deployed page can
+be matched to a commit. Bump the `package.json` version for user-visible
+releases.
+
 ## Layout
 
 - `src/App.jsx` — app shell: light/dark MUI theme from the `PALETTES` map,

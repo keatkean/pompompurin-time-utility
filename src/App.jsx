@@ -241,6 +241,15 @@ function App() {
             sx={{ display: 'block', textAlign: 'center', color: 'text.secondary', mt: 4, mb: 2, px: 2 }}
           >
             Unofficial fan project — Pompompurin © Sanrio Co., Ltd. Not affiliated with or endorsed by Sanrio.
+            {/* Build identity, so the deployed page can be matched to a commit
+                (the PWA cache can serve an older build than what's on main). */}
+            <Box
+              component="span"
+              title={`Built ${import.meta.env.APP_BUILD_TIME}`}
+              sx={{ display: 'block', mt: 0.5, opacity: 0.75 }}
+            >
+              v{import.meta.env.APP_VERSION} · {import.meta.env.APP_COMMIT}
+            </Box>
           </Typography>
         </Container>
       </Box>

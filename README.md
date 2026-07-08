@@ -63,6 +63,15 @@ Pushes to `main` are automatically built, tested, and deployed to GitHub Pages b
 
 > **One-time setup:** in the repository settings, set **Settings → Pages → Build and deployment → Source** to **GitHub Actions**.
 
+### Checking which build is live
+The page footer (and the browser console) shows the build identity, e.g.
+`v1.0.0 · 8edf22a` — version from `package.json` plus the short commit hash the
+build was made from; hover the footer for the build timestamp. Compare the hash
+against `git log` to confirm the deployment is current. Because the app is a
+PWA, a previously installed copy may briefly serve the old cached build — it
+downloads the new version in the background and shows it on the next visit
+(or after a reload).
+
 ## Timer Sound
 - The timer uses a beep sound (`public/beep-07a.wav`). Ensure your browser tab is not muted.
 
