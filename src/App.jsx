@@ -8,15 +8,18 @@ import SchoolIcon from '@mui/icons-material/School';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import Brightness4Icon from '@mui/icons-material/Brightness4';
 import Brightness7Icon from '@mui/icons-material/Brightness7';
+import PetsIcon from '@mui/icons-material/Pets';
 import WorldClock from './components/WorldClock';
 import Timer from './components/Timer';
 import Stopwatch from './components/Stopwatch';
 import Pomodoro from './components/Pomodoro';
 import Calendar from './components/Calendar';
 import ErrorBoundary from './components/ErrorBoundary';
+import CursorChaser from './components/CursorChaser';
 import { dayPhase } from './utils/dayPhase';
 
 const THEME_KEY = 'pompompurinThemeMode';
+const CHASER_KEY = 'pompompurinCursorChaser';
 
 // Light = creamy daytime Pompompurin; dark = the "bedtime pudding" palette
 // borrowed from the World Clock's night card. Both share the pink accent.
@@ -134,11 +137,21 @@ function initialMode() {
   return 'light';
 }
 
+// The cursor-chasing Pompompurin defaults to on; only an explicit 'off' wins.
+function initialChaser() {
+  try {
+    return localStorage.getItem(CHASER_KEY) !== 'off';
+  } catch {
+    return true;
+  }
+}
+
 function App() {
   const [value, setValue] = useState(0);
   const [mode, setMode] = useState(initialMode);
   const [welcomeBack, setWelcomeBack] = useState(false);
   const [greeting, setGreeting] = useState(currentGreeting);
+  const [chaser, setChaser] = useState(initialChaser);
   const theme = useMemo(() => makeTheme(mode), [mode]);
 
   useEffect(() => {
@@ -148,6 +161,14 @@ function App() {
       // Persisting the preference is best-effort.
     }
   }, [mode]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(CHASER_KEY, chaser ? 'on' : 'off');
+    } catch {
+      // Persisting the preference is best-effort.
+    }
+  }, [chaser]);
 
   // Greet the user when they return after stepping away for a while — and
   // refresh the time-of-day greeting, which may have gone stale while hidden.
@@ -186,6 +207,16 @@ function App() {
               sx={{ position: 'absolute', top: 8, right: 8, color: 'primary.main', zIndex: 1 }}
             >
               {mode === 'dark' ? <Brightness7Icon /> : <Brightness4Icon />}
+            </IconButton>
+          </Tooltip>
+          <Tooltip title={chaser ? 'Stop the pudding chase' : 'Let Pompompurin chase your cursor'}>
+            <IconButton
+              onClick={() => setChaser((c) => !c)}
+              aria-label={chaser ? 'Stop the pudding chase' : 'Let Pompompurin chase your cursor'}
+              aria-pressed={chaser}
+              sx={{ position: 'absolute', top: 8, right: 48, color: 'primary.main', zIndex: 1, opacity: chaser ? 1 : 0.55 }}
+            >
+              <PetsIcon />
             </IconButton>
           </Tooltip>
           <Box display="flex" flexDirection="column" alignItems="center" mb={2}>
@@ -260,6 +291,7 @@ function App() {
         message="Welcome back! Pompompurin missed you 🍮"
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       />
+      <CursorChaser enabled={chaser} />
     </ThemeProvider>
   );
 }

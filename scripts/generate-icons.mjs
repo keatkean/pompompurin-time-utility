@@ -1,4 +1,5 @@
-// One-off: rasterize public/pompompurin.svg into the PWA icon set.
+// One-off: rasterize public/pompompurin.svg into the PWA icon set, and
+// public/pudding.svg into the custom-cursor PNG (src/assets/cursor-pudding.png).
 // Run with `node scripts/generate-icons.mjs`. Requires sharp (dev-only).
 import sharp from 'sharp';
 import { readFileSync } from 'node:fs';
@@ -27,4 +28,12 @@ await sharp({ create: { width: 512, height: 512, channels: 4, background: CREAM 
   .png()
   .toFile(join(pub, 'pwa-maskable-512x512.png'));
 
-console.log('icons written to public/');
+// Pudding cursor: browsers want cursor images ≤ 32px. Transparent background;
+// referenced by the cursor rule in src/index.css (Vite inlines it as data:).
+const pudding = readFileSync(join(pub, 'pudding.svg'));
+await sharp(pudding, { density: 384 })
+  .resize(32, 32, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } })
+  .png()
+  .toFile(join(root, 'src', 'assets', 'cursor-pudding.png'));
+
+console.log('icons written to public/, cursor to src/assets/');

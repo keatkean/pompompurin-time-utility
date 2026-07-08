@@ -38,10 +38,16 @@ releases.
   theme mode persisted to localStorage, five tabs. Tab panels are hidden with
   `display: none` (never unmounted) so timers keep running across tab switches.
 - `src/components/` — one component per tab plus the SVG mascot pieces
-  (`Pudding`, `Sprinkles`, `BreathingPudding`) and `ErrorBoundary` (wraps the
-  tab content in App so one render error can't blank the app). WorldClock and
-  Calendar are the largest and share the zone list (see cross-component sync
-  below).
+  (`Pudding`, `Sprinkles`, `BreathingPudding`), `ErrorBoundary` (wraps the
+  tab content in App so one render error can't blank the app), and
+  `CursorChaser` (Pompompurin chases the pudding cursor; rAF lerp with
+  positions in refs written straight to style.transform — never setState per
+  frame; gated on `(pointer: fine)` + not `prefers-reduced-motion`; toggled
+  from the App header, persisted under `pompompurinCursorChaser`). The pudding
+  cursor itself is `src/assets/cursor-pudding.png`, applied globally in
+  `index.css` and regenerated from `public/pudding.svg` by
+  `scripts/generate-icons.mjs`. WorldClock and Calendar are the largest and
+  share the zone list (see cross-component sync below).
 - `src/utils/` — pure, individually unit-tested helpers:
   - `lunar.js` — lunar dates via `Intl` `chinese` calendar; 24 solar terms via
     Meeus's solar-longitude formula; moon phase derived from the lunar day.
