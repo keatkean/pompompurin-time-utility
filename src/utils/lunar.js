@@ -147,6 +147,23 @@ export function moonPhase(date) {
   return { day, zh, en, emoji, isFull: day === 15 || day === 16 };
 }
 
+// Next Gregorian day (as a utcNoon Date) on which a lunar month-day falls, on
+// or after `date` — e.g. '1-1' → next 春节, '8-15' → next 中秋节. Leap months
+// don't carry festivals, so they're skipped. A lunar date recurs within ~13
+// months; 400 days of scanning always finds it.
+export function nextLunarFestival(monthDayKey, date) {
+  const [festMonth, festDay] = monthDayKey.split('-').map(Number);
+  const y = date.getUTCFullYear();
+  const m = date.getUTCMonth() + 1;
+  const d = date.getUTCDate();
+  for (let i = 0; i <= 400; i += 1) {
+    const probe = utcNoon(y, m, d + i); // Date.UTC normalizes day overflow
+    const { monthNum, day, isLeap } = chineseParts(probe);
+    if (!isLeap && monthNum === festMonth && day === festDay) return probe;
+  }
+  return null;
+}
+
 // Days until the next 农历十五 (full moon) on or after `date` (a utcNoon Date).
 // Returns { date, daysUntil } or null. daysUntil 0 means tonight.
 export function nextFullMoon(date) {

@@ -1,11 +1,12 @@
 import { useState, useMemo, useEffect } from 'react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
-import { Container, Box, Tabs, Tab, CssBaseline, Paper, Typography, IconButton, Tooltip, Snackbar } from '@mui/material';
+import { Container, Box, Tabs, Tab, CssBaseline, Paper, Typography, IconButton, Tooltip, Snackbar, useMediaQuery } from '@mui/material';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import TimerIcon from '@mui/icons-material/Timer';
 import ShutterSpeedIcon from '@mui/icons-material/ShutterSpeed';
 import SchoolIcon from '@mui/icons-material/School';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
+import CardGiftcardIcon from '@mui/icons-material/CardGiftcard';
 import Brightness4Icon from '@mui/icons-material/Brightness4';
 import Brightness7Icon from '@mui/icons-material/Brightness7';
 import PetsIcon from '@mui/icons-material/Pets';
@@ -14,6 +15,7 @@ import Timer from './components/Timer';
 import Stopwatch from './components/Stopwatch';
 import Pomodoro from './components/Pomodoro';
 import Calendar from './components/Calendar';
+import Capsules from './components/Capsules';
 import ErrorBoundary from './components/ErrorBoundary';
 import CursorChaser from './components/CursorChaser';
 import { dayPhase } from './utils/dayPhase';
@@ -147,12 +149,17 @@ function initialChaser() {
 }
 
 function App() {
-  const [value, setValue] = useState(0);
+  // A shared capsule link (#capsule=…) lands straight on the Capsules tab.
+  const [value, setValue] = useState(() =>
+    typeof window !== 'undefined' && window.location.hash.startsWith('#capsule=') ? 5 : 0
+  );
   const [mode, setMode] = useState(initialMode);
   const [welcomeBack, setWelcomeBack] = useState(false);
   const [greeting, setGreeting] = useState(currentGreeting);
   const [chaser, setChaser] = useState(initialChaser);
   const theme = useMemo(() => makeTheme(mode), [mode]);
+  // Six full-width tabs don't fit a phone — switch to scrollable tabs there.
+  const compactTabs = useMediaQuery(theme.breakpoints.down('sm'));
 
   useEffect(() => {
     try {
@@ -237,14 +244,17 @@ function App() {
             <Tabs
               value={value}
               onChange={handleChange}
-              centered
-              variant="fullWidth"
+              centered={!compactTabs}
+              variant={compactTabs ? 'scrollable' : 'fullWidth'}
+              scrollButtons="auto"
+              allowScrollButtonsMobile
             >
               <Tab icon={<AccessTimeIcon />} label="World Clock" />
               <Tab icon={<CalendarMonthIcon />} label="Calendar" />
               <Tab icon={<TimerIcon />} label="Timer" />
               <Tab icon={<ShutterSpeedIcon />} label="Stopwatch" />
               <Tab icon={<SchoolIcon />} label="Pomodoro" />
+              <Tab icon={<CardGiftcardIcon />} label="Capsules" />
             </Tabs>
           </Paper>
           <Box display="flex" flexDirection="column" alignItems="center" justifyContent="center" minHeight={420}>
@@ -263,6 +273,9 @@ function App() {
               </Box>
               <Box sx={{ display: value === 4 ? 'block' : 'none', width: '100%' }}>
                 <Pomodoro />
+              </Box>
+              <Box sx={{ display: value === 5 ? 'block' : 'none', width: '100%' }}>
+                <Capsules />
               </Box>
             </ErrorBoundary>
           </Box>

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { lunarInfo, utcNoon, solarTermOn, moonPhase, nextFullMoon } from './lunar';
+import { lunarInfo, utcNoon, solarTermOn, moonPhase, nextFullMoon, nextLunarFestival } from './lunar';
 
 describe('lunar (万年历)', () => {
   it('identifies Chinese New Year 2026 (lunar 正月初一, 丙午 Year of the Horse)', () => {
@@ -73,5 +73,21 @@ describe('lunar (万年历)', () => {
     // A few days earlier, the next 十五 is that same Mid-Autumn day.
     const ahead = nextFullMoon(utcNoon(2026, 9, 20));
     expect(ahead.daysUntil).toBe(5);
+  });
+
+  it('finds the next occurrence of a lunar festival', () => {
+    // 春节 2026 is Feb 17 (asserted above); scanning from mid-2025 lands there.
+    const cny = nextLunarFestival('1-1', utcNoon(2025, 7, 1));
+    expect([cny.getUTCFullYear(), cny.getUTCMonth() + 1, cny.getUTCDate()]).toEqual([2026, 2, 17]);
+    expect(lunarInfo(cny).festival).toEqual(['春节', 'Spring Festival']);
+
+    // Mid-Autumn 2026 is Sep 25; scanning from the day itself returns it.
+    const midAutumn = nextLunarFestival('8-15', utcNoon(2026, 9, 25));
+    expect([midAutumn.getUTCFullYear(), midAutumn.getUTCMonth() + 1, midAutumn.getUTCDate()]).toEqual([2026, 9, 25]);
+
+    // Scanning from the day after finds next year's, not a stale hit.
+    const next = nextLunarFestival('8-15', utcNoon(2026, 9, 26));
+    expect(next.getUTCFullYear()).toBe(2027);
+    expect(lunarInfo(next).festival).toEqual(['中秋节', 'Mid-Autumn Festival']);
   });
 });

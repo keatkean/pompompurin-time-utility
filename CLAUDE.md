@@ -50,7 +50,13 @@ releases.
   share the zone list (see cross-component sync below).
 - `src/utils/` — pure, individually unit-tested helpers:
   - `lunar.js` — lunar dates via `Intl` `chinese` calendar; 24 solar terms via
-    Meeus's solar-longitude formula; moon phase derived from the lunar day.
+    Meeus's solar-longitude formula; moon phase derived from the lunar day;
+    `nextLunarFestival` scans forward for the next 春节/中秋节.
+  - `capsule.js` — time-capsule sealing for the Capsules tab: deflate
+    (`CompressionStream`, feature-detected) + AES-GCM (Web Crypto) with the
+    unlock timestamp as AAD, so tampering the date in a share link breaks
+    decryption. Share links carry the sealed blob in the URL *fragment*
+    (`#capsule=…`); the shelf persists under `pompompurinCapsules`.
   - `timezones.js` / `tzCountries.js` — zone picker option list (city, region,
     country, hand-tuned search hints), UTC-offset math via `formatToParts`.
   - `dayPhase.js` — day/dawn/dusk/night buckets + polite-calling-hours rule.

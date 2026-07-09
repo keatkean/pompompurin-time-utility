@@ -12,6 +12,19 @@ export function formatStopwatch(timeInMs) {
   return `${formatDuration(Math.floor(timeInMs / 1000))}.${centiseconds}`;
 }
 
+// Coarse "opens in" countdown for the capsule shelf: "23d 4h", "3h 12m", "2m".
+// Never "0m" — while something is still locked, at least a minute remains as
+// far as a 30s-tick display can honestly claim.
+export function formatCountdown(ms) {
+  const mins = Math.max(1, Math.ceil(ms / 60000));
+  const d = Math.floor(mins / 1440);
+  const h = Math.floor((mins % 1440) / 60);
+  const m = mins % 60;
+  if (d > 0) return `${d}d ${h}h`;
+  if (h > 0) return `${h}h ${m}m`;
+  return `${m}m`;
+}
+
 // Max the Timer accepts: 99h 59m 59s.
 const MAX_TIMER_SECONDS = 99 * 3600 + 59 * 60 + 59;
 

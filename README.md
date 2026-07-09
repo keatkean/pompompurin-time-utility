@@ -10,6 +10,7 @@ A cute, multi-functional time utility app themed after Sanrio's Pompompurin! Bui
 - **Stopwatch:** Start, stop, lap, and reset, with a **jiggling pudding mascot** that runs alongside you. Laps show both the lap split and the cumulative total.
 - **Pudding Pomodoro:** Focus/break cycles (default 25/5). Every completed focus session earns a pudding sticker and a sprinkle burst — every 4th is golden, and new **flavors (strawberry, matcha, chocolate)** unlock as your sticker sheet grows. A **"Take a breath 🫧" guide** runs a calming box-breathing animation between sessions. Stickers are saved forever, and a running session survives a refresh.
 - **World Calendar & 万年历:** A navigable month calendar where each day shows both the Western date and the Chinese lunar date (农历). Tap the month/year title to jump straight to any year (e.g. a birth year like 1988) instead of stepping month by month. Tap any day for its perpetual-calendar (万年历) detail — lunar date, 干支 year and zodiac (生肖), the 24 solar terms (节气: 立春, 春分, 夏至, 冬至…), traditional festivals (春节, 端午, 中秋…) plus common holidays, **tonight's moon phase with a countdown to the next full moon (满月)**, and a playful **daily fortune (宜/忌)** — all bilingual 中英. A "viewing zone" selector (shared with the World Clock list) shifts which day is "today" so you can see the date-line rollover around the world. Powered entirely by the browser's built-in `Intl` calendar plus an astronomical solar-term formula — no extra libraries.
+- **Pudding Time Capsules (时光胶囊):** Write a note to your future self — or a friend — and seal it inside a pudding that **cannot be opened until the moment you pick**. Choose any date and time, or use the lunar quick-picks: the **next full moon 🌕, 春节, 中秋节,** or New Year. Sealed capsules sit on your shelf (saved between visits) showing a countdown; when the moment arrives you get a notification and the pudding wakes up and wobbles — tap it for a sprinkle-burst reveal. Sealing also copies a **share link that carries the sealed message itself** (no server involved): the recipient sees only a sealed pudding and the opening date until it's time. See "Sharing a capsule" below for how the seal works.
 - **Pudding Cursor Chase:** On mouse devices your cursor becomes a tiny pudding — and Pompompurin chases it around the page trying to catch his favorite snack! He trails behind with a happy wiggle, faces the way he's running, and dozes off with a 💤 when your mouse rests. Toggle the chase with the 🐾 button in the header (your choice is remembered); it politely stays away on touch screens and for reduced-motion users.
 - **Day & Night Mode:** Toggle between the creamy daytime palette and a cozy "bedtime pudding" night theme. Your choice is remembered, and it defaults to your system preference.
 - **Installable PWA:** Add it to your phone home screen or desktop — works offline.
@@ -27,6 +28,21 @@ The World Clock list is encoded in the page URL, so it travels with the link:
 - Opening a shared link takes precedence over the locally saved list. Unknown or
   malformed zones in a link are ignored, so a stale or hand-edited link can never
   crash the app — it just falls back to your saved list, then the default.
+
+## Sharing a capsule
+A sealed capsule travels entirely inside its link (`…#capsule=…`) — there is no
+server and the message never leaves the browser unencrypted:
+
+- The message is **compressed** (deflate) and then **encrypted** (AES-GCM via
+  the Web Crypto API). The unlock time is bound into the cipher's
+  authenticated data, so **editing the date in the link to open a capsule
+  early just breaks it** — the app shows a "scrambled pudding" instead.
+- The link uses the URL *fragment* (`#…`), which browsers never send to any
+  server, so the sealed message can't end up in server logs.
+- **Honesty note:** the decryption key travels inside the link, so this is a
+  *polite* seal, not safebox cryptography — a determined programmer could
+  extract the message early. For friends, family, and your future self, the
+  pudding holds. 🍮
 
 ## Demo
 [Live Demo](https://keatkean.github.io/pompompurin-time-utility/)
