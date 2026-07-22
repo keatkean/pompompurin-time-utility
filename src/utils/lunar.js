@@ -108,21 +108,23 @@ const CHINESE_FULL_ZH_FMT = new Intl.DateTimeFormat('zh-u-ca-chinese', { dateSty
 // target Gregorian day (lunar↔Gregorian is a fixed mapping, so the time of day
 // only needs to be clear of the China-midnight boundary).
 function chineseParts(date) {
-  const parts = CHINESE_PARTS_FMT.formatToParts(date);
-  const get = (type) => parts.find((p) => p.type === type)?.value ?? '';
+  try {
+    const parts = CHINESE_PARTS_FMT.formatToParts(date);
+    const get = (type) => parts.find((p) => p.type === type)?.value ?? '';
 
-  const monthRaw = get('month'); // e.g. "6" or "6bis" for a leap month
-  const isLeap = monthRaw.includes('bis');
-  const monthNum = parseInt(monthRaw, 10);
-  const day = parseInt(get('day'), 10);
-  const relatedYear = get('relatedYear'); // Gregorian year the lunar year sits in
+    const monthRaw = get('month'); // e.g. "6" or "6bis" for a leap month
+    const isLeap = monthRaw.includes('bis');
+    const monthNum = parseInt(monthRaw, 10) || 1;
+    const day = parseInt(get('day'), 10) || 1;
+    const relatedYear = get('relatedYear') || String(date.getUTCFullYear());
 
-  // The 干支 (sexagenary year) is unambiguous in Chinese characters; the romanized
-  // yearName collides (戊/午 both "wu"), so read it from the localized string.
-  const zhFull = CHINESE_FULL_ZH_FMT.format(date);
-  const ganzhi = zhFull.match(/(.{2})年/)?.[1] ?? '';
+    const zhFull = CHINESE_FULL_ZH_FMT.format(date);
+    const ganzhi = zhFull.match(/(.{2})年/)?.[1] ?? '甲子';
 
-  return { monthNum, isLeap, day, ganzhi, branch: ganzhi[1] ?? '', relatedYear };
+    return { monthNum, isLeap, day, ganzhi, branch: ganzhi[1] ?? '子', relatedYear };
+  } catch {
+    return { monthNum: 1, isLeap: false, day: 1, ganzhi: '甲子', branch: '子', relatedYear: String(date.getUTCFullYear()) };
+  }
 }
 
 // Build a noon-UTC Date for a Gregorian y/m/d (month is 1-based here).

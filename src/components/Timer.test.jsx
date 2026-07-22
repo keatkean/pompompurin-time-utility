@@ -144,4 +144,41 @@ describe('Timer', () => {
     expect(saved.remaining).toBe(201);
     expect(saved.initialTime).toBe(300);
   });
+
+  it('switches between Quick, Presentation, and Exam modes', () => {
+    render(<Timer />);
+    fireEvent.click(screen.getByRole('button', { name: 'Presentation Segments' }));
+    expect(screen.getByText(/30m: 5 Students/)).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Classroom Exam' }));
+    expect(screen.getByLabelText('Exam / Test Title')).toBeInTheDocument();
+  });
+
+  it('configures presentation segments and advances speakers via Next Speaker', () => {
+    render(<Timer />);
+    fireEvent.click(screen.getByRole('button', { name: 'Presentation Segments' }));
+    fireEvent.click(screen.getByText(/13m: Pair/)); // Pair @ 4m each + 5m Q&A = 13m
+
+    expect(screen.getByText('00:13:00')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Start' }));
+    expect(screen.getAllByText(/Student 1/).length).toBeGreaterThan(0);
+
+    // Advance to next speaker (Student 2)
+    fireEvent.click(screen.getByRole('button', { name: 'Next Speaker' }));
+    expect(screen.getAllByText(/Student 2/).length).toBeGreaterThan(0);
+  });
+
+  it('provides a fullscreen toggle button across all timer modes', () => {
+    render(<Timer />);
+    expect(screen.getAllByRole('button', { name: /Fullscreen/i }).length).toBeGreaterThan(0);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Presentation Segments' }));
+    expect(screen.getAllByRole('button', { name: /Fullscreen/i }).length).toBeGreaterThan(0);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Classroom Exam' }));
+    expect(screen.getAllByRole('button', { name: /Fullscreen/i }).length).toBeGreaterThan(0);
+  });
 });
+
+

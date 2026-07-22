@@ -66,7 +66,9 @@ const Stopwatch = () => {
     persistStopped(stopped, laps);
   };
 
+  const MAX_LAPS = 100;
   const handleLap = () => {
+    if (laps.length >= MAX_LAPS) return;
     const lapTime = Date.now() - startTimeRef.current;
     setElapsed(lapTime);
     const nextLaps = [...laps, lapTime];
@@ -111,7 +113,7 @@ const Stopwatch = () => {
             <Button variant="contained" color="secondary" onClick={handleStop} disabled={!isActive}>
               Stop
             </Button>
-            <Button variant="contained" color="secondary" onClick={handleLap} disabled={!isActive}>
+            <Button variant="contained" color="secondary" onClick={handleLap} disabled={!isActive || laps.length >= MAX_LAPS}>
               Lap
             </Button>
             <Button variant="outlined" onClick={handleReset}>
@@ -123,7 +125,7 @@ const Stopwatch = () => {
               {laps.map((lap, index) => {
                 const delta = lap - (index > 0 ? laps[index - 1] : 0);
                 return (
-                  <ListItem key={index} divider sx={{ border: 'none' }}>
+                  <ListItem key={`lap-${index}-${lap}`} divider sx={{ border: 'none' }}>
                     <ListItemText
                       primary={`Lap ${index + 1}: ${formatStopwatch(delta)}`}
                       secondary={`Total: ${formatStopwatch(lap)}`}
