@@ -6,17 +6,6 @@ body {
   font-family: 'Baloo 2', 'Quicksand', 'Comic Sans MS', cursive, sans-serif;
 }
 
-/* The cursor IS a pudding — Pompompurin chases it (see CursorChaser.jsx).
-   Universal + !important so it also wins over MUI's cursor:pointer on
-   buttons/links; `auto` fallback covers browsers that reject image cursors.
-   Hotspot 16 12 ≈ the middle of the flan. No-op on touch devices. */
-@media (pointer: fine) {
-  *,
-  *::before,
-  *::after {
-    cursor: url('./assets/cursor-pudding.png') 16 12, auto !important;
-  }
-}
 
 @keyframes pudding-wobble {
   0%, 100% { transform: rotate(0deg); }

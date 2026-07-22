@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { sealCapsule, openCapsule, loadShelf, saveShelf, MAX_MESSAGE_CHARS } from './capsule';
+import { sealCapsule, openCapsule, loadShelf, saveShelf, safeSlice, MAX_MESSAGE_CHARS } from './capsule';
 
 const HOUR = 3_600_000;
 
@@ -80,7 +80,7 @@ describe('capsule shelf storage', () => {
 
   it('roundtrips capsules and filters malformed entries', () => {
     const good = { blob: 'v1.x', openAt: 123456, createdAt: 1, opened: false };
-    saveShelf([good, { blob: 42, openAt: 'soon' }, null]);
+    expect(saveShelf([good, { blob: 42, openAt: 'soon' }, null])).toBe(true);
     // Write raw to simulate a hand-edited mixture too.
     localStorage.setItem(
       'pompompurinCapsules',
@@ -88,4 +88,20 @@ describe('capsule shelf storage', () => {
     );
     expect(loadShelf()).toEqual([good]);
   });
+
+  it('returns false when storage throwing occurs', () => {
+    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+      throw new Error('QuotaExceededError');
+    });
+    expect(saveShelf([{ blob: 'v1.test', openAt: 1 }])).toBe(false);
+  });
 });
+
+describe('safeSlice', () => {
+  it('safely slices multi-byte emoji surrogate pairs without corruption', () => {
+    const emojiStr = '🍮'.repeat(10);
+    expect(safeSlice(emojiStr, 5)).toBe('🍮🍮🍮🍮🍮');
+    expect(safeSlice(123, 5)).toBe('');
+  });
+});
+

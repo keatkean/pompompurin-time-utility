@@ -106,8 +106,10 @@ function makeTheme(mode) {
           root: {
             color: p.tabColor,
             fontWeight: 700,
-            fontSize: 14,
+            fontSize: 13,
             minWidth: 0,
+            padding: '6px 4px',
+            lineHeight: 1.2,
           },
         },
       },
@@ -240,7 +242,7 @@ function App() {
               {greeting}
             </Typography>
           </Box>
-          <Paper elevation={6} sx={{ p: 2, mb: 4, borderRadius: 6, maxWidth: 520, mx: 'auto' }}>
+          <Paper elevation={6} sx={{ p: 1.5, mb: 4, borderRadius: 6, maxWidth: 580, mx: 'auto' }}>
             <Tabs
               value={value}
               onChange={handleChange}

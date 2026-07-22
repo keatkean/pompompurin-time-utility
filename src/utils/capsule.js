@@ -146,7 +146,15 @@ export function loadShelf() {
 export function saveShelf(capsules) {
   try {
     localStorage.setItem(SHELF_KEY, JSON.stringify(capsules));
+    return true;
   } catch {
-    // Persisting is best-effort.
+    return false;
   }
 }
+
+// Unicode code-point safe string slicing to prevent breaking surrogate pair emojis
+export function safeSlice(str, max) {
+  if (typeof str !== 'string') return '';
+  return Array.from(str).slice(0, max).join('');
+}
+

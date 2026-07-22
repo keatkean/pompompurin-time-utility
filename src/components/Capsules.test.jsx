@@ -90,6 +90,63 @@ describe('Capsules', () => {
     render(<Capsules />);
     await waitFor(() => expect(screen.getByText(/scrambled in transit/)).toBeInTheDocument());
   });
+
+  it('handles malformed URL percent encoding safely', async () => {
+    window.location.hash = '#capsule=v1.invalid%FFencoding';
+    render(<Capsules />);
+    await waitFor(() => expect(screen.getByText(/scrambled in transit/)).toBeInTheDocument());
+  });
+
+  it('keeps revealed message bound to the exact blob when an earlier shelf item is removed', async () => {
+    const openAt = Date.now() - 1000;
+    const blob1 = await sealCapsule({ message: 'Capsule 1', openAt });
+    const blob2 = await sealCapsule({ message: 'Capsule 2', openAt });
+    saveShelf([
+      { blob: blob1, openAt, createdAt: openAt - HOUR, opened: false },
+      { blob: blob2, openAt, createdAt: openAt - HOUR, opened: false },
+    ]);
+
+    render(<Capsules />);
+    const buttons = screen.getAllByRole('button', { name: 'Open this capsule' });
+    fireEvent.click(buttons[1]); // Open Capsule 2
+
+    await waitFor(() => expect(screen.getByText('Capsule 2')).toBeInTheDocument());
+
+    // Discard Capsule 1 (first item)
+    const discardButtons = screen.getAllByRole('button', { name: 'Discard capsule' });
+    fireEvent.click(discardButtons[0]);
+
+    // Capsule 2 should still remain revealed and displayed correctly
+    expect(screen.getByText('Capsule 2')).toBeInTheDocument();
+  });
+
+  it('allows keeping an already unlocked incoming capsule to the shelf', async () => {
+    const blob = await sealCapsule({ message: 'already ripe 🎂', from: 'kk', openAt: Date.now() - 1000 });
+    window.location.hash = `#capsule=${blob}`;
+
+    render(<Capsules />);
+    await waitFor(() => expect(screen.getByText('already ripe 🎂')).toBeInTheDocument());
+
+    fireEvent.click(screen.getByRole('button', { name: 'Keep it' }));
+    const saved = JSON.parse(localStorage.getItem('pompompurinCapsules'));
+    expect(saved).toHaveLength(1);
+    expect(saved[0].blob).toBe(blob);
+  });
+
+  it('re-copies share link from a shelf card', async () => {
+    const writeTextMock = vi.fn().mockResolvedValue();
+    vi.stubGlobal('navigator', { clipboard: { writeText: writeTextMock } });
+
+    const openAt = Date.now() + HOUR;
+    const blob = await sealCapsule({ message: 'future note', openAt });
+    saveShelf([{ blob, openAt, createdAt: Date.now(), opened: false }]);
+
+    render(<Capsules />);
+    const copyButton = screen.getByRole('button', { name: 'Copy share link' });
+    fireEvent.click(copyButton);
+
+    expect(writeTextMock).toHaveBeenCalledWith(expect.stringContaining(`#capsule=${blob}`));
+  });
 });
 
 describe('formatCountdown', () => {

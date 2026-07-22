@@ -12,11 +12,13 @@ import {
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import RedeemIcon from '@mui/icons-material/Redeem';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import {
   sealCapsule,
   openCapsule,
   loadShelf,
   saveShelf,
+  safeSlice,
   MAX_MESSAGE_CHARS,
 } from '../utils/capsule';
 import { nextFullMoon, nextLunarFestival, utcNoon } from '../utils/lunar';
@@ -43,28 +45,39 @@ const Capsules = () => {
   const [from, setFrom] = useState('');
   const [openAtInput, setOpenAtInput] = useState('');
   const [shelf, setShelf] = useState(loadShelf);
-  const [revealed, setRevealed] = useState(null); // { index, message, from }
+  const [revealed, setRevealed] = useState(null); // { blob, message, from }
   const [incoming, setIncoming] = useState(null); // { blob, result }
   const [copied, setCopied] = useState(false);
+  const [storageError, setStorageError] = useState(false);
   const [now, setNow] = useState(() => Date.now());
   // Capsules that already announced their unlock this session.
   const announcedRef = useRef(new Set());
 
+  // Tick every 1s (1000ms) for smooth real-time countdown updates
   useEffect(() => {
-    const id = setInterval(() => setNow(Date.now()), 30000);
+    const id = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(id);
   }, []);
 
   useEffect(() => {
-    saveShelf(shelf);
+    const ok = saveShelf(shelf);
+    if (!ok && shelf.length > 0) {
+      setStorageError(true);
+    }
   }, [shelf]);
 
   // A shared capsule arrives in the URL fragment (never sent to any server).
-  // Consume it once and clean the address bar.
+  // Consume it once and clean the address bar. Safely handles malformed URL components.
   useEffect(() => {
     const hash = window.location.hash;
     if (!hash.startsWith(HASH_PREFIX)) return;
-    const blob = decodeURIComponent(hash.slice(HASH_PREFIX.length));
+    let blob;
+    try {
+      blob = decodeURIComponent(hash.slice(HASH_PREFIX.length));
+    } catch {
+      setIncoming({ blob: '', result: { invalid: true } });
+      return;
+    }
     try {
       window.history.replaceState(null, '', window.location.pathname + window.location.search);
     } catch {
@@ -134,6 +147,7 @@ const Capsules = () => {
     );
 
   const openAtMs = openAtInput ? new Date(openAtInput).getTime() : NaN;
+  const messageCharLength = Array.from(message).length;
   const canSeal =
     sealingAvailable() && message.trim().length > 0 && Number.isFinite(openAtMs) && openAtMs > now;
 
@@ -144,25 +158,37 @@ const Capsules = () => {
     const blob = await sealCapsule({ message: message.trim(), from: from.trim(), openAt: openAtMs });
     setShelf((s) => [...s, { blob, openAt: openAtMs, createdAt: Date.now(), opened: false }]);
     const link = `${window.location.origin}${window.location.pathname}${HASH_PREFIX}${blob}`;
-    navigator.clipboard?.writeText(link).catch(() => {});
-    setCopied(true);
+    if (navigator.clipboard?.writeText) {
+      navigator.clipboard.writeText(link).then(() => {
+        setCopied(true);
+      }).catch(() => {});
+    }
     setMessage('');
     setFrom('');
     setOpenAtInput('');
   };
 
-  const handleOpen = async (index) => {
+  const handleCopyLink = (blob) => {
+    const link = `${window.location.origin}${window.location.pathname}${HASH_PREFIX}${blob}`;
+    if (navigator.clipboard?.writeText) {
+      navigator.clipboard.writeText(link).then(() => {
+        setCopied(true);
+      }).catch(() => {});
+    }
+  };
+
+  const handleOpen = async (blob, index) => {
     initAudio(); // the click is our user gesture for the jingle
-    const result = await openCapsule(shelf[index].blob);
+    const result = await openCapsule(blob);
     if (result.message === undefined) return; // still locked or corrupted — nothing to celebrate
     playCompletionSound();
-    setRevealed({ index, message: result.message, from: result.from });
+    setRevealed({ blob, message: result.message, from: result.from });
     setShelf((s) => s.map((c, i) => (i === index ? { ...c, opened: true } : c)));
   };
 
-  const handleRemove = (index) => {
-    if (revealed?.index === index) setRevealed(null);
-    setShelf((s) => s.filter((_, i) => i !== index));
+  const handleRemove = (blob) => {
+    if (revealed?.blob === blob) setRevealed(null);
+    setShelf((s) => s.filter((c) => c.blob !== blob));
   };
 
   const keepIncoming = () => {
@@ -178,7 +204,7 @@ const Capsules = () => {
 
   const capsuleCard = (c, index) => {
     const ready = c.openAt <= now;
-    const isRevealed = revealed?.index === index;
+    const isRevealed = revealed?.blob === c.blob;
     return (
       <Paper
         key={c.blob.slice(-24)}
@@ -189,7 +215,7 @@ const Capsules = () => {
           <Box
             component={ready && !isRevealed ? 'button' : 'div'}
             type={ready && !isRevealed ? 'button' : undefined}
-            onClick={ready && !isRevealed ? () => handleOpen(index) : undefined}
+            onClick={ready && !isRevealed ? () => handleOpen(c.blob, index) : undefined}
             aria-label={ready && !isRevealed ? 'Open this capsule' : undefined}
             className={ready && !isRevealed ? 'pudding-wobble' : undefined}
             sx={{
@@ -229,7 +255,10 @@ const Capsules = () => {
               {new Date(c.openAt).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })}
             </Typography>
           </Box>
-          <IconButton size="small" aria-label="Discard capsule" onClick={() => handleRemove(index)}>
+          <IconButton size="small" aria-label="Copy share link" onClick={() => handleCopyLink(c.blob)}>
+            <ContentCopyIcon fontSize="small" />
+          </IconButton>
+          <IconButton size="small" aria-label="Discard capsule" onClick={() => handleRemove(c.blob)}>
             <CloseIcon fontSize="small" />
           </IconButton>
         </Stack>
@@ -284,6 +313,9 @@ const Capsules = () => {
                       </Typography>
                     )}
                   </Box>
+                  <Button variant="outlined" size="small" onClick={keepIncoming} sx={{ flexShrink: 0 }}>
+                    Keep it
+                  </Button>
                   <IconButton size="small" aria-label="Dismiss capsule" onClick={() => setIncoming(null)}>
                     <CloseIcon fontSize="small" />
                   </IconButton>
@@ -303,15 +335,15 @@ const Capsules = () => {
                 multiline
                 minRows={2}
                 value={message}
-                onChange={(e) => setMessage(e.target.value.slice(0, MAX_MESSAGE_CHARS))}
-                helperText={`${message.length}/${MAX_MESSAGE_CHARS}`}
+                onChange={(e) => setMessage(safeSlice(e.target.value, MAX_MESSAGE_CHARS))}
+                helperText={`${messageCharLength}/${MAX_MESSAGE_CHARS}`}
                 fullWidth
               />
               <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
                 <TextField
                   label="From (optional)"
                   value={from}
-                  onChange={(e) => setFrom(e.target.value.slice(0, 40))}
+                  onChange={(e) => setFrom(safeSlice(e.target.value, 40))}
                   sx={{ flexGrow: 1 }}
                 />
                 <TextField
@@ -372,6 +404,13 @@ const Capsules = () => {
         autoHideDuration={3500}
         onClose={() => setCopied(false)}
         message="Sealed! Share link copied — it can't be opened early 🍮"
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      />
+      <Snackbar
+        open={storageError}
+        autoHideDuration={4000}
+        onClose={() => setStorageError(false)}
+        message="Storage full — couldn't save capsule to local shelf 🍮⚠️"
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       />
     </Box>

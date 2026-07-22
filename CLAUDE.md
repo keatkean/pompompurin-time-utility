@@ -4,8 +4,8 @@ Guidance for Claude Code when working in this repository.
 
 ## Project
 
-Pompompurin Time Utility — a Sanrio-themed single-page React PWA with five tabs:
-World Clock, Calendar (Chinese lunar 万年历), Timer, Stopwatch, Pomodoro.
+Pompompurin Time Utility — a Sanrio-themed single-page React PWA with six tabs:
+World Clock, Calendar (Chinese lunar 万年历), Timer, Stopwatch, Pomodoro, Capsules.
 Deployed to GitHub Pages at base path `/pompompurin-time-utility/`.
 
 Stack: React 19, MUI 7 (+ Emotion), Vite 7, vite-plugin-pwa, Vitest + React
@@ -35,18 +35,15 @@ releases.
 ## Layout
 
 - `src/App.jsx` — app shell: light/dark MUI theme from the `PALETTES` map,
-  theme mode persisted to localStorage, five tabs. Tab panels are hidden with
+  theme mode persisted to localStorage, six tabs. Tab panels are hidden with
   `display: none` (never unmounted) so timers keep running across tab switches.
 - `src/components/` — one component per tab plus the SVG mascot pieces
   (`Pudding`, `Sprinkles`, `BreathingPudding`), `ErrorBoundary` (wraps the
   tab content in App so one render error can't blank the app), and
-  `CursorChaser` (Pompompurin chases the pudding cursor; rAF lerp with
+  `CursorChaser` (Pompompurin chases the mouse cursor; rAF lerp with
   positions in refs written straight to style.transform — never setState per
   frame; gated on `(pointer: fine)` + not `prefers-reduced-motion`; toggled
-  from the App header, persisted under `pompompurinCursorChaser`). The pudding
-  cursor itself is `src/assets/cursor-pudding.png`, applied globally in
-  `index.css` and regenerated from `public/pudding.svg` by
-  `scripts/generate-icons.mjs`. WorldClock and Calendar are the largest and
+  from the App header, persisted under `pompompurinCursorChaser`). WorldClock and Calendar are the largest and
   share the zone list (see cross-component sync below).
 - `src/utils/` — pure, individually unit-tested helpers:
   - `lunar.js` — lunar dates via `Intl` `chinese` calendar; 24 solar terms via
@@ -56,7 +53,9 @@ releases.
     (`CompressionStream`, feature-detected) + AES-GCM (Web Crypto) with the
     unlock timestamp as AAD, so tampering the date in a share link breaks
     decryption. Share links carry the sealed blob in the URL *fragment*
-    (`#capsule=…`); the shelf persists under `pompompurinCapsules`.
+    (`#capsule=…`); includes safe URI decoding, re-copying share links from shelf cards,
+    `safeSlice` Unicode code-point emoji safety, storage error detection, and
+    shelf persistence under `pompompurinCapsules`.
   - `timezones.js` / `tzCountries.js` — zone picker option list (city, region,
     country, hand-tuned search hints), UTC-offset math via `formatToParts`.
   - `dayPhase.js` — day/dawn/dusk/night buckets + polite-calling-hours rule.
