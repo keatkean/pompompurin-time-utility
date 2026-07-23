@@ -209,14 +209,14 @@ const Pomodoro = () => {
           >
             {formatDuration(displayTime)}
           </Typography>
-          <Stack direction="row" spacing={{ xs: 1.5, sm: 3 }} justifyContent="center" flexWrap="wrap" useFlexGap>
+          <Stack direction="row" spacing={{ xs: 1, sm: 3 }} justifyContent="center" flexWrap="wrap" useFlexGap>
             <TextField
               label="Focus (min)"
               type="number"
               value={focusMinutes}
               onChange={(e) => setFocusMinutes(clampMinutes(e.target.value, 120))}
               disabled={isActive || isPaused}
-              sx={{ width: 120 }}
+              sx={{ width: { xs: 105, sm: 120 } }}
               slotProps={{ htmlInput: { min: 1, max: 120 } }}
             />
             <TextField
@@ -225,18 +225,18 @@ const Pomodoro = () => {
               value={breakMinutes}
               onChange={(e) => setBreakMinutes(clampMinutes(e.target.value, 30))}
               disabled={isActive || isPaused}
-              sx={{ width: 120 }}
+              sx={{ width: { xs: 105, sm: 120 } }}
               slotProps={{ htmlInput: { min: 1, max: 30 } }}
             />
           </Stack>
-          <Stack direction="row" spacing={{ xs: 1.5, sm: 3 }} justifyContent="center" flexWrap="wrap" useFlexGap>
-            <Button variant="contained" onClick={handleStart} disabled={isActive}>
+          <Stack direction="row" spacing={{ xs: 1, sm: 3 }} justifyContent="center" flexWrap="wrap" useFlexGap>
+            <Button variant="contained" onClick={handleStart} disabled={isActive} sx={{ minWidth: { xs: 72, sm: 100 }, px: { xs: 1, sm: 2 } }}>
               {isPaused ? 'Resume' : 'Start'}
             </Button>
-            <Button variant="contained" color="secondary" onClick={handlePause} disabled={!isActive}>
+            <Button variant="contained" color="secondary" onClick={handlePause} disabled={!isActive} sx={{ minWidth: { xs: 72, sm: 100 }, px: { xs: 1, sm: 2 } }}>
               Pause
             </Button>
-            <Button variant="outlined" onClick={handleReset}>
+            <Button variant="outlined" onClick={handleReset} sx={{ minWidth: { xs: 72, sm: 100 }, px: { xs: 1, sm: 2 } }}>
               Reset
             </Button>
           </Stack>

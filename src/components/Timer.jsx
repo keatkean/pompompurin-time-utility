@@ -533,7 +533,7 @@ const Timer = () => {
                 ))}
               </Stack>
 
-              <Stack direction="row" spacing={{ xs: 1.5, sm: 3 }} justifyContent="center" flexWrap="wrap" useFlexGap>
+              <Stack direction="row" spacing={{ xs: 1, sm: 3 }} justifyContent="center" flexWrap="wrap" useFlexGap>
                 {timeFields.map(({ label, value, setter, max }) => (
                   <TextField
                     key={label}
@@ -542,7 +542,7 @@ const Timer = () => {
                     value={value}
                     onChange={(e) => setter(e.target.value)}
                     disabled={isActive || isPaused}
-                    sx={{ width: 90 }}
+                    sx={{ width: { xs: 80, sm: 90 } }}
                     slotProps={{ htmlInput: { min: 0, max } }}
                   />
                 ))}

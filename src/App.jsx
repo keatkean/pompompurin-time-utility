@@ -208,12 +208,12 @@ function App() {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <Box minHeight="100vh" display="flex" alignItems="center" justifyContent="center" sx={{ background: theme.appGradient }}>
-        <Container maxWidth="sm" disableGutters sx={{ position: 'relative' }}>
+        <Container maxWidth="sm" disableGutters sx={{ position: 'relative', px: { xs: 1.5, sm: 0 } }}>
           <Tooltip title={mode === 'dark' ? 'Switch to day mode' : 'Switch to night mode'}>
             <IconButton
               onClick={toggleMode}
               aria-label={mode === 'dark' ? 'Switch to day mode' : 'Switch to night mode'}
-              sx={{ position: 'absolute', top: 8, right: 8, color: 'primary.main', zIndex: 1 }}
+              sx={{ position: 'absolute', top: 8, right: { xs: 4, sm: 8 }, color: 'primary.main', zIndex: 1 }}
             >
               {mode === 'dark' ? <Brightness7Icon /> : <Brightness4Icon />}
             </IconButton>
@@ -223,26 +223,32 @@ function App() {
               onClick={() => setChaser((c) => !c)}
               aria-label={chaser ? 'Stop the pudding chase' : 'Let Pompompurin chase your cursor'}
               aria-pressed={chaser}
-              sx={{ position: 'absolute', top: 8, right: 48, color: 'primary.main', zIndex: 1, opacity: chaser ? 1 : 0.55 }}
+              sx={{ position: 'absolute', top: 8, right: { xs: 44, sm: 48 }, color: 'primary.main', zIndex: 1, opacity: chaser ? 1 : 0.55 }}
             >
               <PetsIcon />
             </IconButton>
           </Tooltip>
-          <Box display="flex" flexDirection="column" alignItems="center" mb={2}>
+          <Box display="flex" flexDirection="column" alignItems="center" mb={2} sx={{ pt: { xs: 1, sm: 0 } }}>
             <img
               src={`${import.meta.env.BASE_URL}pompompurin.svg`}
               alt="Pompompurin"
               width={80}
               height={80}
             />
-            <Typography variant="h4" component="h1" fontWeight={700} color="primary" sx={{ mt: 1, mb: 0.5 }}>
+            <Typography
+              variant="h4"
+              component="h1"
+              fontWeight={700}
+              color="primary"
+              sx={{ mt: 1, mb: 0.5, fontSize: { xs: '1.6rem', sm: '2.125rem' }, textAlign: 'center' }}
+            >
               Pompompurin Time Utility
             </Typography>
-            <Typography variant="subtitle1" color="text.secondary" sx={{ mb: 2, fontWeight: 700 }}>
+            <Typography variant="subtitle1" color="text.secondary" sx={{ mb: 2, fontWeight: 700, textAlign: 'center' }}>
               {greeting}
             </Typography>
           </Box>
-          <Paper elevation={6} sx={{ p: 1.5, mb: 4, borderRadius: 6, maxWidth: 580, mx: 'auto' }}>
+          <Paper elevation={6} sx={{ p: { xs: 1, sm: 1.5 }, mb: 4, borderRadius: 6, maxWidth: 580, mx: 'auto', width: '100%' }}>
             <Tabs
               value={value}
               onChange={handleChange}

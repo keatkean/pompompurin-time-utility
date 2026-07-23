@@ -245,8 +245,8 @@ const WorldClock = () => {
                     transition: 'background-color 0.4s, border-color 0.3s, opacity 0.3s',
                   }}
                 >
-                  <Box sx={{ position: 'relative', width: '100%', mb: 1 }}>
-                    <Typography sx={{ textAlign: 'center', fontSize: 32, fontWeight: 700, color: phase.accent }} variant="h5">
+                  <Box sx={{ position: 'relative', width: '100%', mb: 1, px: { xs: 4.5, sm: 6 } }}>
+                    <Typography sx={{ textAlign: 'center', fontSize: { xs: 22, sm: 32 }, fontWeight: 700, color: phase.accent }} variant="h5">
                       {tz.city}
                     </Typography>
                     <Box
@@ -373,7 +373,7 @@ const WorldClock = () => {
             <Typography variant="body2" color="text.secondary" sx={{ mb: 1, textAlign: 'left', fontSize: 16 }}>
               Add another time zone
             </Typography>
-            <Stack direction="row" spacing={2} alignItems="center">
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} alignItems="center" width="100%">
               <Autocomplete
                 options={TZ_OPTIONS}
                 value={selectedTimeZone}
@@ -421,7 +421,7 @@ const WorldClock = () => {
                 variant="contained"
                 aria-label="Add time zone"
                 disabled={!selectedTimeZone}
-                sx={{ minWidth: 56, height: 56 }}
+                sx={{ width: { xs: '100%', sm: 'auto' }, minWidth: 56, height: 56 }}
               >
                 <AddCircle fontSize="large" />
               </Button>

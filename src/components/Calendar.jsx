@@ -208,22 +208,22 @@ const Calendar = () => {
       >
         <Stack spacing={2} alignItems="center" width="100%">
           {/* Month navigation */}
-          <Stack direction="row" alignItems="center" justifyContent="center" spacing={1} width="100%">
-            <IconButton onClick={() => goMonth(-1)} aria-label="Previous month" sx={{ color: 'primary.main' }}>
+          <Stack direction="row" alignItems="center" justifyContent="center" spacing={{ xs: 0.5, sm: 1 }} width="100%">
+            <IconButton onClick={() => goMonth(-1)} aria-label="Previous month" sx={{ color: 'primary.main', p: { xs: 0.5, sm: 1 } }}>
               <ChevronLeftIcon />
             </IconButton>
             <Button
               onClick={togglePicker}
               endIcon={<ExpandMoreIcon />}
               aria-expanded={pickerOpen}
-              sx={{ minWidth: 170, color: 'primary.main', fontWeight: 700, fontSize: '1.25rem', textTransform: 'none' }}
+              sx={{ minWidth: { xs: 130, sm: 170 }, color: 'primary.main', fontWeight: 700, fontSize: { xs: '1rem', sm: '1.25rem' }, textTransform: 'none', px: { xs: 0.5, sm: 1 } }}
             >
               {monthLabel}
             </Button>
-            <IconButton onClick={() => goMonth(1)} aria-label="Next month" sx={{ color: 'primary.main' }}>
+            <IconButton onClick={() => goMonth(1)} aria-label="Next month" sx={{ color: 'primary.main', p: { xs: 0.5, sm: 1 } }}>
               <ChevronRightIcon />
             </IconButton>
-            <Button size="small" variant="outlined" onClick={goToday} sx={{ minWidth: 64 }}>
+            <Button size="small" variant="outlined" onClick={goToday} sx={{ minWidth: { xs: 52, sm: 64 }, px: { xs: 1, sm: 1.5 } }}>
               Today
             </Button>
           </Stack>
@@ -311,8 +311,8 @@ const Calendar = () => {
                     flexDirection: 'column',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    p: 0.5,
-                    minHeight: 52,
+                    p: { xs: 0.25, sm: 0.5 },
+                    minHeight: { xs: 44, sm: 52 },
                     cursor: 'pointer',
                     borderRadius: 2,
                     border: '2px solid',
@@ -326,7 +326,7 @@ const Calendar = () => {
                   <Typography
                     sx={{
                       fontWeight: 700,
-                      fontSize: 16,
+                      fontSize: { xs: 13, sm: 15 },
                       lineHeight: 1.1,
                       color: isToday ? '#5B4222' : isWeekend ? 'primary.main' : 'text.primary',
                     }}
@@ -335,10 +335,11 @@ const Calendar = () => {
                   </Typography>
                   <Typography
                     sx={{
-                      fontSize: 11,
+                      fontSize: { xs: 9.5, sm: 11 },
                       lineHeight: 1.1,
                       color: badge.color,
                       fontWeight: badge.bold ? 700 : 400,
+                      mt: 0.25,
                     }}
                   >
                     {badge.text}

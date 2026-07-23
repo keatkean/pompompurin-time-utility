@@ -211,7 +211,7 @@ const Capsules = () => {
         elevation={2}
         sx={{ p: 2, borderRadius: '18px', bgcolor: 'background.default', width: '100%', position: 'relative' }}
       >
-        <Stack direction="row" spacing={2} alignItems="center">
+        <Stack direction="row" spacing={{ xs: 1, sm: 2 }} alignItems="center">
           <Box
             component={ready && !isRevealed ? 'button' : 'div'}
             type={ready && !isRevealed ? 'button' : undefined}
@@ -255,12 +255,14 @@ const Capsules = () => {
               {new Date(c.openAt).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })}
             </Typography>
           </Box>
-          <IconButton size="small" aria-label="Copy share link" onClick={() => handleCopyLink(c.blob)}>
-            <ContentCopyIcon fontSize="small" />
-          </IconButton>
-          <IconButton size="small" aria-label="Discard capsule" onClick={() => handleRemove(c.blob)}>
-            <CloseIcon fontSize="small" />
-          </IconButton>
+          <Box sx={{ display: 'flex', gap: 0.5, flexShrink: 0 }}>
+            <IconButton size="small" aria-label="Copy share link" onClick={() => handleCopyLink(c.blob)}>
+              <ContentCopyIcon fontSize="small" />
+            </IconButton>
+            <IconButton size="small" aria-label="Discard capsule" onClick={() => handleRemove(c.blob)}>
+              <CloseIcon fontSize="small" />
+            </IconButton>
+          </Box>
         </Stack>
       </Paper>
     );

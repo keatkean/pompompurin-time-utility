@@ -102,21 +102,21 @@ const Stopwatch = () => {
           </Typography>
           <Stack
             direction="row"
-            spacing={{ xs: 1.5, sm: 3 }}
+            spacing={{ xs: 1, sm: 3 }}
             justifyContent="center"
             flexWrap="wrap"
             useFlexGap
           >
-            <Button variant="contained" onClick={handleStart} disabled={isActive}>
+            <Button variant="contained" onClick={handleStart} disabled={isActive} sx={{ minWidth: { xs: 68, sm: 100 }, px: { xs: 1, sm: 2 } }}>
               Start
             </Button>
-            <Button variant="contained" color="secondary" onClick={handleStop} disabled={!isActive}>
+            <Button variant="contained" color="secondary" onClick={handleStop} disabled={!isActive} sx={{ minWidth: { xs: 68, sm: 100 }, px: { xs: 1, sm: 2 } }}>
               Stop
             </Button>
-            <Button variant="contained" color="secondary" onClick={handleLap} disabled={!isActive || laps.length >= MAX_LAPS}>
+            <Button variant="contained" color="secondary" onClick={handleLap} disabled={!isActive || laps.length >= MAX_LAPS} sx={{ minWidth: { xs: 68, sm: 100 }, px: { xs: 1, sm: 2 } }}>
               Lap
             </Button>
-            <Button variant="outlined" onClick={handleReset}>
+            <Button variant="outlined" onClick={handleReset} sx={{ minWidth: { xs: 68, sm: 100 }, px: { xs: 1, sm: 2 } }}>
               Reset
             </Button>
           </Stack>
