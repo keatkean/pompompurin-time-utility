@@ -110,7 +110,7 @@ const CursorChaser = ({ enabled = true }) => {
       {sleeping && (
         <span
           className="chaser-zzz"
-          style={{ position: 'absolute', top: -32, right: -16, fontSize: 48 }}
+          style={{ position: 'absolute', top: 25, right: 30, fontSize: 32 }}
         >
           💤
         </span>
