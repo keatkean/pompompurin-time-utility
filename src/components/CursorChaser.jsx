@@ -9,12 +9,12 @@ import { useEffect, useRef, useState } from 'react';
 // setState per frame (60 re-renders/second would drag the whole app). State is
 // only used for the rare transitions: first appearance and sleep/wake.
 
-const SIZE = 52;
+const SIZE = 208;
 const EASE = 0.085; // fraction of the remaining distance covered per frame
 const IDLE_SLEEP_MS = 4000;
 // Trail a little below-right of the cursor so the pudding stays visible ahead
 // of him — a chase, not a catch.
-const OFFSET = { x: 22, y: 26 };
+const OFFSET = { x: 88, y: 104 };
 
 // Decorative motion is skipped for reduced-motion users, and there is nothing
 // to chase without a mouse (coarse/touch pointers). Checked once per mount —
@@ -110,7 +110,7 @@ const CursorChaser = ({ enabled = true }) => {
       {sleeping && (
         <span
           className="chaser-zzz"
-          style={{ position: 'absolute', top: -10, right: -6, fontSize: 15 }}
+          style={{ position: 'absolute', top: -32, right: -16, fontSize: 48 }}
         >
           💤
         </span>
