@@ -272,7 +272,11 @@ const Capsules = () => {
     <Box mt={6}>
       <Paper elevation={8} sx={{ p: { xs: 2.5, sm: 5 }, borderRadius: 3, maxWidth: 600, mx: 'auto' }}>
         <Stack spacing={3} alignItems="center">
-          <Typography variant="h5" color="primary" sx={{ fontWeight: 700 }}>
+          <Typography
+            variant="h5"
+            color="primary"
+            sx={{ fontWeight: 700, textAlign: 'center', fontSize: { xs: '1.25rem', sm: '1.5rem' } }}
+          >
             Pudding Time Capsules 时光胶囊
           </Typography>
 
@@ -328,7 +332,7 @@ const Capsules = () => {
 
           {/* Seal a new capsule */}
           <Box width="100%">
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 1, fontSize: 16 }}>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 1, fontSize: { xs: 14, sm: 16 }, textAlign: { xs: 'center', sm: 'left' } }}>
               Write a note to the future — it stays sealed inside a pudding until the moment you pick.
             </Typography>
             <Stack spacing={2}>

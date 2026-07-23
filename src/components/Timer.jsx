@@ -505,7 +505,7 @@ const Timer = () => {
           {/* QUICK TIMER CONFIGURATION */}
           {mode === 'quick' && !isActive && !isPaused && (
             <>
-              <Stack direction="row" spacing={1} justifyContent="center" alignItems="center" sx={{ width: '100%', maxWidth: 360 }}>
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} justifyContent="center" alignItems="center" sx={{ width: '100%', maxWidth: 360 }}>
                 <TextField
                   size="small"
                   fullWidth
@@ -514,9 +514,9 @@ const Timer = () => {
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') handleQuickSet();
                   }}
-                  label="Quick set — e.g. 25m, 1h30m, 90s"
+                  label="Quick set (e.g. 25m, 1h30m, 90s)"
                 />
-                <Button variant="contained" onClick={handleQuickSet} disabled={!quickInput.trim()} sx={{ minWidth: 64 }}>
+                <Button variant="contained" onClick={handleQuickSet} disabled={!quickInput.trim()} sx={{ width: { xs: '100%', sm: 'auto' }, minWidth: 64, height: { sm: 40 } }}>
                   Set
                 </Button>
               </Stack>
@@ -533,7 +533,7 @@ const Timer = () => {
                 ))}
               </Stack>
 
-              <Stack direction="row" spacing={{ xs: 1, sm: 3 }} justifyContent="center" flexWrap="wrap" useFlexGap>
+              <Stack direction="row" spacing={{ xs: 1, sm: 3 }} justifyContent="center" flexWrap="wrap" useFlexGap width="100%">
                 {timeFields.map(({ label, value, setter, max }) => (
                   <TextField
                     key={label}
@@ -542,7 +542,7 @@ const Timer = () => {
                     value={value}
                     onChange={(e) => setter(e.target.value)}
                     disabled={isActive || isPaused}
-                    sx={{ width: { xs: 80, sm: 90 } }}
+                    sx={{ width: { xs: 'calc(33.33% - 8px)', sm: 90 }, minWidth: 70 }}
                     slotProps={{ htmlInput: { min: 0, max } }}
                   />
                 ))}
@@ -565,13 +565,13 @@ const Timer = () => {
                 ))}
               </Stack>
 
-              <Stack direction="row" spacing={2} justifyContent="center">
+              <Stack direction="row" spacing={{ xs: 1, sm: 2 }} justifyContent="center" flexWrap="wrap" useFlexGap width="100%">
                 <TextField
                   label="Presenters"
                   type="number"
                   value={speakerCount}
                   onChange={(e) => setSpeakerCount(clampNumber(e.target.value, 1, 10))}
-                  sx={{ width: 110 }}
+                  sx={{ width: { xs: 'calc(50% - 6px)', sm: 110 } }}
                   slotProps={{ htmlInput: { min: 1, max: 10 } }}
                 />
                 <TextField
@@ -579,7 +579,7 @@ const Timer = () => {
                   type="number"
                   value={speakerMins}
                   onChange={(e) => setSpeakerMins(clampNumber(e.target.value, 1, 60))}
-                  sx={{ width: 140 }}
+                  sx={{ width: { xs: 'calc(50% - 6px)', sm: 140 } }}
                   slotProps={{ htmlInput: { min: 1, max: 60 } }}
                 />
                 <TextField
@@ -587,7 +587,7 @@ const Timer = () => {
                   type="number"
                   value={qaMins}
                   onChange={(e) => setQaMins(clampNumber(e.target.value, 0, 60))}
-                  sx={{ width: 130 }}
+                  sx={{ width: { xs: '100%', sm: 130 } }}
                   slotProps={{ htmlInput: { min: 0, max: 60 } }}
                 />
               </Stack>
@@ -604,7 +604,7 @@ const Timer = () => {
                 fullWidth
                 sx={{ maxWidth: 380 }}
               />
-              <Stack direction="row" spacing={{ xs: 1.5, sm: 3 }} justifyContent="center" flexWrap="wrap" useFlexGap>
+              <Stack direction="row" spacing={{ xs: 1, sm: 3 }} justifyContent="center" flexWrap="wrap" useFlexGap width="100%">
                 {timeFields.map(({ label, value, setter, max }) => (
                   <TextField
                     key={label}
@@ -613,7 +613,7 @@ const Timer = () => {
                     value={value}
                     onChange={(e) => setter(e.target.value)}
                     disabled={isActive || isPaused}
-                    sx={{ width: 90 }}
+                    sx={{ width: { xs: 'calc(33.33% - 8px)', sm: 90 }, minWidth: 70 }}
                     slotProps={{ htmlInput: { min: 0, max } }}
                   />
                 ))}
