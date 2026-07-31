@@ -150,8 +150,8 @@ describe('Timer', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Presentation Segments' }));
     expect(screen.getByText(/30m: 5 Students/)).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Classroom Exam' }));
-    expect(screen.getByLabelText('Exam / Test Title')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Classroom Test' }));
+    expect(screen.getByLabelText(/Test Title/)).toBeInTheDocument();
   });
 
   it('configures presentation segments and advances speakers via Next Speaker', () => {
@@ -176,9 +176,35 @@ describe('Timer', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Presentation Segments' }));
     expect(screen.getAllByRole('button', { name: /Fullscreen/i }).length).toBeGreaterThan(0);
 
-    fireEvent.click(screen.getByRole('button', { name: 'Classroom Exam' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Classroom Test' }));
     expect(screen.getAllByRole('button', { name: /Fullscreen/i }).length).toBeGreaterThan(0);
   });
+
+  it('triggers milestone warnings for 15m, 10m, 5m, and 1m in Exam Mode', () => {
+    render(<Timer />);
+    fireEvent.click(screen.getByRole('button', { name: 'Classroom Test' }));
+
+    // Set 20 minutes exam (1200 seconds)
+    fireEvent.change(screen.getByLabelText('Minutes'), { target: { value: '20' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Start' }));
+
+    // Advance to 14 mins left (below 15m mark = 900s)
+    act(() => vi.advanceTimersByTime(360 * 1000));
+    expect(screen.getByText(/15 Minutes Remaining/i)).toBeInTheDocument();
+
+    // Advance to 8 mins left (below 10m mark = 600s)
+    act(() => vi.advanceTimersByTime(360 * 1000));
+    expect(screen.getByText(/10 Minutes Remaining/i)).toBeInTheDocument();
+
+    // Advance to 3 mins left (below 5m mark = 300s)
+    act(() => vi.advanceTimersByTime(300 * 1000));
+    expect(screen.getByText(/Final 5 Minutes Remaining/i)).toBeInTheDocument();
+
+    // Advance to 30s left (below 1m mark = 60s)
+    act(() => vi.advanceTimersByTime(150 * 1000));
+    expect(screen.getByText(/Final Minute Remaining/i)).toBeInTheDocument();
+  });
 });
+
 
 

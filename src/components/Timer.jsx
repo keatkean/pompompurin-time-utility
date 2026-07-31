@@ -88,7 +88,7 @@ const Timer = () => {
   const [qaMins, setQaMins] = useState(5);
 
   // Exam mode inputs
-  const [examTitle, setExamTitle] = useState(restoredTimer?.examTitle ?? 'Midterm Exam');
+  const [examTitle, setExamTitle] = useState(restoredTimer?.examTitle ?? '');
   const [isFullscreen, setIsFullscreen] = useState(false);
 
   // Timer runtime state
@@ -101,6 +101,7 @@ const Timer = () => {
   const endTimeRef = useRef(restored.running?.endTime ?? 0);
   const firedRef = useRef(false);
   const lastAnnouncedSegmentRef = useRef(-1);
+  const lastAnnouncedMilestoneRef = useRef(-1);
 
   // Sync native browser fullscreen change event
   useEffect(() => {
@@ -169,6 +170,25 @@ const Timer = () => {
     }
   }, [isActive, mode, activeSegmentInfo]);
 
+  // Trigger exam milestone chimes & notifications (15m, 10m, 5m, 1m)
+  useEffect(() => {
+    if (!isActive || mode !== 'exam' || initialTime <= 0) return;
+
+    const checkMilestone = (threshold, msg) => {
+      if (initialTime > threshold && timeLeft <= threshold && lastAnnouncedMilestoneRef.current > threshold) {
+        playCompletionSound();
+        notify(msg);
+      }
+    };
+
+    checkMilestone(900, '⚠️ 15 Minutes Remaining! 🍮');
+    checkMilestone(600, '⚠️ 10 Minutes Remaining! 🍮');
+    checkMilestone(300, '🚨 Final 5 Minutes Remaining! 🍮');
+    checkMilestone(60, '🚨 Final 1 Minute Remaining! 🍮');
+
+    lastAnnouncedMilestoneRef.current = timeLeft;
+  }, [isActive, mode, initialTime, timeLeft]);
+
   // Timer Tick Interval
   useEffect(() => {
     if (!isActive) return;
@@ -208,8 +228,10 @@ const Timer = () => {
   const targetSeconds = mode === 'presentation' ? presentationTotalSeconds : inputSeconds;
   const displayTime = isActive || isPaused ? timeLeft : targetSeconds;
   const showWarning = isActive && timeLeft > 0 && initialTime > 0 && timeLeft / initialTime <= 0.1;
-  const examWarning5m = mode === 'exam' && isActive && timeLeft > 0 && timeLeft <= 300;
-  const examWarning15m = mode === 'exam' && isActive && timeLeft > 300 && timeLeft <= 900;
+  const examWarning1min = mode === 'exam' && isActive && initialTime > 60 && timeLeft > 0 && timeLeft <= 60;
+  const examWarning5m = mode === 'exam' && isActive && initialTime > 300 && timeLeft > 60 && timeLeft <= 300;
+  const examWarning10m = mode === 'exam' && isActive && initialTime > 600 && timeLeft > 300 && timeLeft <= 600;
+  const examWarning15m = mode === 'exam' && isActive && initialTime > 900 && timeLeft > 600 && timeLeft <= 900;
   const puddingFraction = (isActive || isPaused) && initialTime > 0 ? timeLeft / initialTime : 1;
 
   // Target Clock End-Time for Exam Mode
@@ -236,6 +258,7 @@ const Timer = () => {
     setFinished(false);
     firedRef.current = false;
     lastAnnouncedSegmentRef.current = activeSegmentInfo ? activeSegmentInfo.index : 0;
+    lastAnnouncedMilestoneRef.current = total;
     localStorage.setItem(
       TIMER_KEY,
       JSON.stringify({
@@ -271,6 +294,7 @@ const Timer = () => {
     setSavedSegments(null);
     firedRef.current = false;
     lastAnnouncedSegmentRef.current = -1;
+    lastAnnouncedMilestoneRef.current = -1;
     localStorage.removeItem(TIMER_KEY);
   };
 
@@ -354,7 +378,7 @@ const Timer = () => {
             />
             <Chip
               icon={<SchoolIcon fontSize="small" />}
-              label="Classroom Exam"
+              label="Classroom Test"
               onClick={() => setMode('exam')}
               color={mode === 'exam' ? 'primary' : 'default'}
               variant={mode === 'exam' ? 'filled' : 'outlined'}
@@ -375,9 +399,21 @@ const Timer = () => {
             </Alert>
           )}
 
+          {examWarning1min && (
+            <Alert severity="error" sx={{ fontWeight: 'bold', fontSize: 18 }}>
+              🚨 Final Minute Remaining! Stop writing soon.
+            </Alert>
+          )}
+
           {examWarning5m && (
             <Alert severity="error" sx={{ fontWeight: 'bold', fontSize: 18 }}>
               🚨 Final 5 Minutes Remaining! Wrap up your answers.
+            </Alert>
+          )}
+
+          {examWarning10m && (
+            <Alert severity="warning" sx={{ fontWeight: 'bold', fontSize: 18 }}>
+              ⚠️ 10 Minutes Remaining. Review your answers!
             </Alert>
           )}
 
@@ -390,7 +426,7 @@ const Timer = () => {
           {/* Mascot */}
           <Box
             sx={{ position: 'relative' }}
-            className={showWarning || examWarning5m ? 'pudding-wobble' : finished ? 'pudding-bounce' : undefined}
+            className={showWarning || examWarning5m || examWarning1min ? 'pudding-wobble' : finished ? 'pudding-bounce' : undefined}
           >
             <Pudding fraction={puddingFraction} size={150} />
             {finished && <Sprinkles />}
@@ -451,7 +487,14 @@ const Timer = () => {
             </Paper>
           )}
 
-          {/* Quick & Exam Modes Main Countdown Display (and Presentation setup state) */}
+          {/* Test Mode Title Display */}
+          {mode === 'exam' && (isActive || isPaused) && (
+            <Typography variant="h5" color="primary" sx={{ fontWeight: 800, textAlign: 'center', mt: 1, mb: -0.5 }}>
+              📝 {examTitle.trim() || 'Classroom Test'}
+            </Typography>
+          )}
+
+          {/* Quick & Test Modes Main Countdown Display (and Presentation setup state) */}
           {(mode !== 'presentation' || (!isActive && !isPaused)) && (
             <Stack direction="row" alignItems="center" justifyContent="center" spacing={1} width="100%">
               <Typography
@@ -461,7 +504,7 @@ const Timer = () => {
                 sx={{
                   textAlign: 'center',
                   fontSize: mode === 'exam' ? 'clamp(2.5rem, 14vw, 4.5rem)' : 'clamp(2rem, 12vw, 3.5rem)',
-                  color: examWarning5m ? 'error.main' : examWarning15m ? 'warning.main' : showWarning ? 'warning.main' : 'primary.main',
+                  color: examWarning1min || examWarning5m ? 'error.main' : examWarning10m || examWarning15m || showWarning ? 'warning.main' : 'primary.main',
                   transition: 'color 0.3s',
                 }}
               >
@@ -475,12 +518,14 @@ const Timer = () => {
             </Stack>
           )}
 
-          {/* Target Clock End-Time for Exam Mode */}
+          {/* Target Clock End-Time for Test Mode */}
           {mode === 'exam' && targetEndTimeLabel && (
             <Typography variant="subtitle1" color="text.secondary" sx={{ fontWeight: 700 }}>
-              🕒 Exam Ends at: {targetEndTimeLabel}
+              🕒 Test Ends at: {targetEndTimeLabel}
             </Typography>
           )}
+
+
 
           {/* Presentation Segment Stepper Bar */}
           {mode === 'presentation' && activeSegments.length > 0 && (
@@ -594,11 +639,12 @@ const Timer = () => {
             </Stack>
           )}
 
-          {/* EXAM MODE CONFIGURATION */}
+          {/* TEST MODE CONFIGURATION */}
           {mode === 'exam' && !isActive && !isPaused && (
             <Stack spacing={2} width="100%" alignItems="center">
               <TextField
-                label="Exam / Test Title"
+                label="Test Title (Optional)"
+                placeholder="e.g. Practical Test, Quiz 1"
                 value={examTitle}
                 onChange={(e) => setExamTitle(e.target.value.slice(0, 50))}
                 fullWidth
