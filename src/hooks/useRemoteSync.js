@@ -7,25 +7,11 @@ const PEER_CONFIG = {
     iceServers: [
       { urls: 'stun:stun.l.google.com:19302' },
       { urls: 'stun:global.stun.twilio.com:3478' },
-      {
-        urls: 'turn:openrelay.metered.ca:80',
-        username: 'openrelay',
-        credential: 'openrelay',
-      },
-      {
-        urls: 'turn:openrelay.metered.ca:443',
-        username: 'openrelay',
-        credential: 'openrelay',
-      },
-      {
-        urls: 'turn:openrelay.metered.ca:443?transport=tcp',
-        username: 'openrelay',
-        credential: 'openrelay',
-      },
+      { urls: 'stun:stun1.l.google.com:19302' },
+      { urls: 'stun:stun2.l.google.com:19302' },
     ],
   },
 };
-
 
 /**
  * Generates a cryptographically secure 6-character case-sensitive PIN (e.g. k9F7p2).
@@ -124,7 +110,11 @@ export function useRemoteSync({ appState, onRemoteAction }) {
   const initPresenter = useCallback((currentPin) => {
     if (!currentPin) return;
     if (peerRef.current) {
-      peerRef.current.destroy();
+      try {
+        peerRef.current.destroy();
+      } catch {
+        // ignore destroy errors
+      }
     }
 
     const presenterId = `pompompurin-presenter-${currentPin.trim().toLowerCase()}`;
@@ -185,10 +175,14 @@ export function useRemoteSync({ appState, onRemoteAction }) {
     if (!targetPin) return;
     const cleanPin = targetPin.trim().toLowerCase();
     setIsConnecting(true);
-    setPeerError(null);
+    setPeerError('Connecting to PeerJS signaling server...');
 
     if (peerRef.current) {
-      peerRef.current.destroy();
+      try {
+        peerRef.current.destroy();
+      } catch {
+        // ignore destroy errors
+      }
     }
 
     const controllerId = `pompompurin-ctl-${cleanPin}-${Math.floor(Math.random() * 100000)}`;
@@ -196,6 +190,7 @@ export function useRemoteSync({ appState, onRemoteAction }) {
     peerRef.current = peer;
 
     peer.on('open', () => {
+      setPeerError(`Searching for Presenter PIN "${targetPin.toUpperCase()}"...`);
       const presenterId = `pompompurin-presenter-${cleanPin}`;
       const conn = peer.connect(presenterId, { reliable: true });
       connRef.current = conn;
@@ -204,10 +199,9 @@ export function useRemoteSync({ appState, onRemoteAction }) {
         if (!conn.open) {
           setIsConnecting(false);
           setIsConnected(false);
-          setPeerError(`Could not connect to Presenter display for PIN "${targetPin}". Please make sure the main Presenter screen is open and connected to the internet!`);
-
+          setPeerError(`Could not find Presenter for PIN "${targetPin.toUpperCase()}". Make sure the Presenter screen is open and displaying PIN "${targetPin.toUpperCase()}"!`);
         }
-      }, 8000);
+      }, 7000);
 
       conn.on('open', () => {
         clearTimeout(timeout);
@@ -240,19 +234,12 @@ export function useRemoteSync({ appState, onRemoteAction }) {
       setIsConnecting(false);
       setIsConnected(false);
       if (err?.type === 'peer-unavailable') {
-        setPeerError(`Presenter PIN "${targetPin}" was not found yet. Retrying connection...`);
-        // Auto retry once after 2 seconds in case presenter signaling registration had a brief delay
-        setTimeout(() => {
-          if (peerRef.current && !peerRef.current.destroyed) {
-            connectToPresenter(targetPin);
-          }
-        }, 2000);
+        setPeerError(`Presenter PIN "${targetPin.toUpperCase()}" not found. Verify the main screen is open with PIN "${targetPin.toUpperCase()}"!`);
       } else {
-        setPeerError(err?.message || 'WebRTC connection error.');
+        setPeerError(err?.message || 'WebRTC signaling error.');
       }
     });
   }, []);
-
 
   // Periodic heartbeat to clean dead sockets and keep WebRTC data channels active
   useEffect(() => {
@@ -287,7 +274,11 @@ export function useRemoteSync({ appState, onRemoteAction }) {
     }
     return () => {
       if (peerRef.current) {
-        peerRef.current.destroy();
+        try {
+          peerRef.current.destroy();
+        } catch {
+          // ignore
+        }
       }
     };
   }, [isController, pin, initPresenter, connectToPresenter]);
