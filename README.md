@@ -15,7 +15,22 @@ A cute, multi-functional time utility app themed after Sanrio's Pompompurin! Bui
 - **Day & Night Mode:** Toggle between the creamy daytime palette and a cozy "bedtime pudding" night theme. Your choice is remembered, and it defaults to your system preference.
 - **Installable PWA:** Add it to your phone home screen or desktop — works offline.
 - **Pompompurin Theme:** Creamy yellow, brown, and pink color palette, playful font, a Pompompurin mascot in the header, and a **greeting that changes with your local time of day**. The pudding dresses for the occasion — a **party hat on festivals, a flower in spring, shades in summer, a scarf in winter** — and gives you a warm **"welcome back" when you return** after stepping away.
+- **Presenter Remote Control (📱):** Launch the app on Laptop A (projector display) and tap the Presenter Remote icon to generate a 6-character case-sensitive PIN and QR code. Scan the QR code with your smartphone camera (or open the link on Laptop B) to remotely switch tabs, start/pause/reset countdowns, advance presentation speakers (`Next Speaker 🎤`), configure speaker counts & durations, and view a **live remaining time & active speaker banner** on your phone screen. Features automatic smooth-scrolling on Laptop A when tabs switch, auto-closing pairing modal upon connection, and one-tap presenter revocation (`🚫 Revoke & Disconnect All Devices`). Powered by WebRTC (PeerJS) — 100% serverless, zero installation, and works across different Wi-Fi networks.
 - **Responsive:** Works on desktop and mobile.
+
+## Presenter Remote Control (📱)
+The app includes a zero-server presenter remote system using PeerJS WebRTC:
+
+- **Launch Presenter Mode:** On Laptop A (connected to the classroom projector), click the **Presenter Remote** icon in the header bar.
+- **Connect Phone / Laptop B:** Scan the QR code using your phone camera or open the link on Laptop B (`…/?mode=controller&pin=XXXXXX`). Pairing modal auto-closes on Laptop A as soon as your device connects!
+- **6-Character Case-Sensitive PINs:** Generates high-entropy case-sensitive PIN codes (`e.g. UjVcw3`) to guarantee secure room isolation and prevent unauthorized pairing.
+- **Live Two-Way Sync:** Your phone screen displays a live readout of remaining timer seconds (`⏱️ 03:45 remaining`), active speaker badge (`🎙️ Speaker 2 of 5`), and active tab name. Tapping remote buttons (Start, Pause, Reset, Next Speaker 🎤, +1m, +5m, or Tab buttons) immediately updates Laptop A.
+- **Presentation Segments Control:** Remotely advance speakers (`Next Speaker 🎤`), adjust total speaker count, set per-speaker minutes, and toggle timer modes (`Quick`, `Presentation`, `Exam`).
+- **Auto-Scroll Display:** Laptop A automatically smooth-scrolls to center the active rectangular tab card on the projector display whenever you switch tabs remotely.
+- **Security & Revocation:** One-tap **"🚫 Revoke & Disconnect All Devices"** button on Laptop A immediately terminates active remote sessions.
+- **GitHub Pages Ready:** Communication is direct Peer-to-Peer — no backend server or hosting setup required.
+
+
 
 ## Sharing your clock
 The World Clock list is encoded in the page URL, so it travels with the link:

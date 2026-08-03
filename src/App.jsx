@@ -1,4 +1,5 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
+
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { Container, Box, Tabs, Tab, CssBaseline, Paper, Typography, IconButton, Tooltip, Snackbar, useMediaQuery } from '@mui/material';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
@@ -10,6 +11,7 @@ import CardGiftcardIcon from '@mui/icons-material/CardGiftcard';
 import Brightness4Icon from '@mui/icons-material/Brightness4';
 import Brightness7Icon from '@mui/icons-material/Brightness7';
 import PetsIcon from '@mui/icons-material/Pets';
+import QrCodeScannerIcon from '@mui/icons-material/QrCodeScanner';
 import WorldClock from './components/WorldClock';
 import Timer from './components/Timer';
 import Stopwatch from './components/Stopwatch';
@@ -18,7 +20,11 @@ import Calendar from './components/Calendar';
 import Capsules from './components/Capsules';
 import ErrorBoundary from './components/ErrorBoundary';
 import CursorChaser from './components/CursorChaser';
+import RemoteControlModal from './components/RemoteControlModal';
+import ControllerDashboard from './components/ControllerDashboard';
+import { useRemoteSync } from './hooks/useRemoteSync';
 import { dayPhase } from './utils/dayPhase';
+
 
 const THEME_KEY = 'pompompurinThemeMode';
 const CHASER_KEY = 'pompompurinCursorChaser';
@@ -202,13 +208,104 @@ function App() {
     setValue(newValue);
   };
 
+  const mainContentRef = useRef(null);
+  const [remoteModalOpen, setRemoteModalOpen] = useState(false);
+  const [telemetry, setTelemetry] = useState({});
+
+  useEffect(() => {
+    const onTelemetry = (e) => {
+      if (e.detail) {
+        setTelemetry((prev) => ({ ...prev, ...e.detail }));
+      }
+    };
+    window.addEventListener('pompompurin-state-telemetry', onTelemetry);
+    return () => window.removeEventListener('pompompurin-state-telemetry', onTelemetry);
+  }, []);
+
+  const fullAppState = useMemo(
+    () => ({
+      activeTab: value,
+      mode,
+      ...telemetry,
+    }),
+    [value, mode, telemetry]
+  );
+
+  const handleRemoteAction = (action, payload) => {
+    if (action === 'CHANGE_TAB' && typeof payload === 'number') {
+      setValue(payload);
+    } else if (action === 'TOGGLE_THEME') {
+      setMode((m) => (m === 'dark' ? 'light' : 'dark'));
+    } else {
+      window.dispatchEvent(new CustomEvent('pompompurin-remote-command', { detail: { action, payload } }));
+    }
+  };
+
+  const {
+    isController,
+    pin,
+    setPin,
+    regeneratePin,
+    disconnectAll,
+    isConnected,
+    isConnecting,
+    connectedCount,
+    peerError,
+    syncedState,
+    sendCommand,
+    connectToPresenter,
+  } = useRemoteSync({
+    appState: fullAppState,
+    onRemoteAction: handleRemoteAction,
+  });
+
+  // Smoothly scroll active tab content into view when switching tabs (e.g. via remote control)
+  useEffect(() => {
+    if (mainContentRef.current && !isController) {
+      mainContentRef.current.scrollIntoView?.({ behavior: 'smooth', block: 'center' });
+    }
+  }, [value, isController]);
+
+
+
+
   const toggleMode = () => setMode((m) => (m === 'dark' ? 'light' : 'dark'));
+
+  if (isController) {
+    return (
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        <Box minHeight="100vh" sx={{ background: theme.appGradient }}>
+          <ControllerDashboard
+            pin={pin}
+            setPin={setPin}
+            isConnected={isConnected}
+            isConnecting={isConnecting}
+            peerError={peerError}
+            syncedState={syncedState}
+            onSendCommand={sendCommand}
+            onConnectPin={connectToPresenter}
+          />
+        </Box>
+      </ThemeProvider>
+    );
+  }
+
 
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <Box minHeight="100vh" display="flex" alignItems="center" justifyContent="center" sx={{ background: theme.appGradient }}>
         <Container maxWidth="sm" disableGutters sx={{ position: 'relative', px: { xs: 1.5, sm: 0 } }}>
+          <Tooltip title="Presenter Remote Control (QR Code & PIN)">
+            <IconButton
+              onClick={() => setRemoteModalOpen(true)}
+              aria-label="Presenter Remote Control"
+              sx={{ position: 'absolute', top: 8, right: { xs: 84, sm: 88 }, color: 'primary.main', zIndex: 1 }}
+            >
+              <QrCodeScannerIcon />
+            </IconButton>
+          </Tooltip>
           <Tooltip title={mode === 'dark' ? 'Switch to day mode' : 'Switch to night mode'}>
             <IconButton
               onClick={toggleMode}
@@ -218,6 +315,7 @@ function App() {
               {mode === 'dark' ? <Brightness7Icon /> : <Brightness4Icon />}
             </IconButton>
           </Tooltip>
+
           <Tooltip title={chaser ? 'Stop the pudding chase' : 'Let Pompompurin chase your cursor'}>
             <IconButton
               onClick={() => setChaser((c) => !c)}
@@ -265,7 +363,8 @@ function App() {
               <Tab icon={<CardGiftcardIcon />} label="Capsules" />
             </Tabs>
           </Paper>
-          <Box display="flex" flexDirection="column" alignItems="center" justifyContent="center" minHeight={420}>
+          <Box ref={mainContentRef} display="flex" flexDirection="column" alignItems="center" justifyContent="center" minHeight={420}>
+
             <ErrorBoundary>
               <Box sx={{ display: value === 0 ? 'block' : 'none', width: '100%' }}>
                 <WorldClock />
@@ -313,7 +412,19 @@ function App() {
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       />
       <CursorChaser enabled={chaser} />
+      <RemoteControlModal
+        open={remoteModalOpen}
+        onClose={() => setRemoteModalOpen(false)}
+        pin={pin}
+        isConnected={isConnected}
+        connectedCount={connectedCount}
+        peerError={peerError}
+        onRegeneratePin={regeneratePin}
+        onDisconnectAll={disconnectAll}
+      />
+
     </ThemeProvider>
+
   );
 }
 

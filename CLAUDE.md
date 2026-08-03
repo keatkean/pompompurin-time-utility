@@ -44,7 +44,9 @@ releases.
   positions in refs written straight to style.transform — never setState per
   frame; gated on `(pointer: fine)` + not `prefers-reduced-motion`; toggled
   from the App header, persisted under `pompompurinCursorChaser`). WorldClock and Calendar are the largest and
-  share the zone list (see cross-component sync below).
+  share the zone list (see cross-component sync below). Includes `RemoteControlModal` (QR code & 4-digit PIN pairing display) and `ControllerDashboard` (rendered when URL contains `?mode=controller` for smartphone remote control and live remaining time display).
+- `src/hooks/` — `useRemoteSync.js` manages PeerJS WebRTC P2P multi-device sync over public signaling without a custom server. Telemetry state is dispatched via `pompompurin-state-telemetry` CustomEvent and remote actions via `pompompurin-remote-command`.
+
 - `src/utils/` — pure, individually unit-tested helpers:
   - `lunar.js` — lunar dates via `Intl` `chinese` calendar; 24 solar terms via
     Meeus's solar-longitude formula; moon phase derived from the lunar day;

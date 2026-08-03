@@ -183,6 +183,40 @@ const Pomodoro = () => {
     localStorage.removeItem(SESSION_KEY);
   };
 
+  // Dispatch telemetry state for presenter sync
+  useEffect(() => {
+    window.dispatchEvent(
+      new CustomEvent('pompompurin-state-telemetry', {
+        detail: {
+          pomodoroState: {
+            isRunning: isActive,
+            remainingSeconds: displayTime,
+            formattedTime: formatDuration(displayTime),
+            phase,
+            modeName: phase === 'focus' ? 'Focus Session' : 'Break Time',
+          },
+        },
+      })
+    );
+  }, [isActive, displayTime, phase]);
+
+  // Handle remote presenter commands
+  useEffect(() => {
+    const onRemoteCommand = (e) => {
+      const { action } = e.detail || {};
+      if (action === 'TIMER_START') {
+        if (!isActive) handleStart();
+      } else if (action === 'TIMER_PAUSE') {
+        if (isActive) handlePause();
+      } else if (action === 'TIMER_RESET') {
+        handleReset();
+      }
+    };
+    window.addEventListener('pompompurin-remote-command', onRemoteCommand);
+    return () => window.removeEventListener('pompompurin-remote-command', onRemoteCommand);
+  }, [isActive, handleStart, handlePause, handleReset]);
+
+
   return (
     <Box mt={6}>
       <Paper elevation={8} sx={{ p: { xs: 2.5, sm: 5 }, borderRadius: 3, maxWidth: 600, mx: 'auto' }}>

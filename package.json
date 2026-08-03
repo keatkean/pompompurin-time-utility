@@ -5,7 +5,8 @@
   "license": "MIT",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --host",
+
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
@@ -19,6 +20,8 @@
     "@fontsource/quicksand": "^5.2.10",
     "@mui/icons-material": "^7.2.0",
     "@mui/material": "^7.2.0",
+    "peerjs": "^1.5.5",
+    "qrcode.react": "^4.2.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0"
   },

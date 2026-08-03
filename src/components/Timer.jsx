@@ -1,4 +1,5 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+
 import {
   TextField,
   Button,
@@ -298,8 +299,30 @@ const Timer = () => {
     localStorage.removeItem(TIMER_KEY);
   };
 
+  // Dispatch live telemetry state for presenter sync
+  useEffect(() => {
+    window.dispatchEvent(
+      new CustomEvent('pompompurin-state-telemetry', {
+        detail: {
+          timerState: {
+            isRunning: isActive,
+            isPaused,
+            remainingSeconds: displayTime,
+            formattedTime: formatDuration(displayTime),
+            totalSeconds: initialTime || targetSeconds,
+            mode,
+            activeSegmentInfo,
+            speakerCount,
+            speakerMins,
+            qaMins,
+          },
+        },
+      })
+    );
+  }, [isActive, isPaused, displayTime, initialTime, targetSeconds, mode, activeSegmentInfo, speakerCount, speakerMins, qaMins]);
+
   // Next Speaker / Skip Segment action
-  const handleNextSegment = () => {
+  const handleNextSegment = useCallback(() => {
     if ((!isActive && !isPaused) || !activeSegmentInfo || activeSegmentInfo.remaining <= 0) return;
     const skipAmount = activeSegmentInfo.remaining;
     const newTimeLeft = Math.max(0, timeLeft - skipAmount);
@@ -310,7 +333,41 @@ const Timer = () => {
     }
     playCompletionSound();
     notify(`Advanced to next segment! 🍮`);
-  };
+  }, [isActive, isPaused, activeSegmentInfo, timeLeft, playCompletionSound, notify]);
+
+  // Handle remote presenter commands
+  useEffect(() => {
+    const onRemoteCommand = (e) => {
+      const { action, payload } = e.detail || {};
+      if (action === 'TIMER_START') {
+        handleStart();
+      } else if (action === 'TIMER_PAUSE') {
+        handlePause();
+      } else if (action === 'TIMER_RESET') {
+        handleReset();
+      } else if (action === 'NEXT_SPEAKER') {
+        handleNextSegment();
+      } else if (action === 'SET_TIMER_MODE' && typeof payload === 'string') {
+        setMode(payload);
+      } else if (action === 'SET_PRESENTATION_CONFIG' && payload) {
+        if (typeof payload.speakers === 'number') setSpeakerCount(Math.max(1, payload.speakers));
+        if (typeof payload.speakerMins === 'number') setSpeakerMins(Math.max(1, payload.speakerMins));
+        if (typeof payload.qaMins === 'number') setQaMins(Math.max(0, payload.qaMins));
+      } else if (action === 'ADD_TIME' && typeof payload === 'number') {
+        if (isActive) {
+          const newEnd = Math.max(Date.now(), endTimeRef.current + payload * 1000);
+          endTimeRef.current = newEnd;
+          const newRemaining = Math.max(0, Math.ceil((newEnd - Date.now()) / 1000));
+          setTimeLeft(newRemaining);
+        } else {
+          setTimeLeft((prev) => Math.max(0, prev + payload));
+        }
+      }
+    };
+    window.addEventListener('pompompurin-remote-command', onRemoteCommand);
+    return () => window.removeEventListener('pompompurin-remote-command', onRemoteCommand);
+  }, [isActive, isPaused, handleStart, handlePause, handleReset, handleNextSegment]);
+
 
   const applyPreset = (totalSeconds) => {
     setHours(Math.floor(totalSeconds / 3600));
