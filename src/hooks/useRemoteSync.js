@@ -204,7 +204,8 @@ export function useRemoteSync({ appState, onRemoteAction }) {
         if (!conn.open) {
           setIsConnecting(false);
           setIsConnected(false);
-          setPeerError(`Could not connect to Presenter for PIN "${targetPin}". Make sure Laptop A is open!`);
+          setPeerError(`Could not connect to Presenter display for PIN "${targetPin}". Please make sure the main Presenter screen is open and connected to the internet!`);
+
         }
       }, 8000);
 

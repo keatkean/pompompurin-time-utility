@@ -199,7 +199,7 @@ export default function RemoteControlModal({
             variant="body2"
             sx={{ color: subtitleColor, mb: 1.2, fontWeight: 600, fontSize: '0.85rem', lineHeight: 1.35 }}
           >
-            Scan with your phone camera or open the link on Laptop B to control the presentation.
+            Scan with your phone camera or open the link on another device to control the presentation.
           </Typography>
 
           {/* QR Code Container */}
@@ -294,7 +294,7 @@ export default function RemoteControlModal({
           {/* Localhost Warning Banner */}
           {typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && (
             <Alert severity="info" sx={{ mb: 1.2, borderRadius: 3, textAlign: 'left', fontSize: '0.75rem', py: 0.2 }}>
-              💡 <strong>Localhost Testing Note</strong>: Phone cameras scanning <code>localhost</code> will fail because <code>localhost</code> points to your phone. Open Laptop A using your local Wi-Fi IP (e.g. <code>http://192.168.x.x:5173</code>) before scanning, or test by opening an Incognito tab!
+              💡 <strong>Localhost Testing Note</strong>: Phone cameras scanning <code>localhost</code> will fail because <code>localhost</code> points to your phone. Open this website using your laptop's local Wi-Fi IP (e.g. <code>http://192.168.x.x:5173</code>) before scanning, or test by opening an Incognito tab!
             </Alert>
           )}
 
