@@ -291,8 +291,16 @@ export default function RemoteControlModal({
 
 
 
+          {/* Localhost Warning Banner */}
+          {typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && (
+            <Alert severity="info" sx={{ mb: 1.2, borderRadius: 3, textAlign: 'left', fontSize: '0.75rem', py: 0.2 }}>
+              💡 <strong>Localhost Testing Note</strong>: Phone cameras scanning <code>localhost</code> will fail because <code>localhost</code> points to your phone. Open Laptop A using your local Wi-Fi IP (e.g. <code>http://192.168.x.x:5173</code>) before scanning, or test by opening an Incognito tab!
+            </Alert>
+          )}
+
           {/* Connection Status Badge */}
           <Box mb={1.2}>
+
             {peerError ? (
               <Alert severity="warning" sx={{ borderRadius: 3, textAlign: 'left', fontSize: '0.78rem', py: 0.2 }}>
                 {peerError}
