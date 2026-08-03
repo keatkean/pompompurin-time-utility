@@ -55,7 +55,9 @@ export default function ControllerDashboard({
   onConnectPin,
 }) {
   const [inputPin, setInputPin] = useState(pin || '');
+  const [showDebug, setShowDebug] = useState(false);
   const muiTheme = useTheme();
+
 
   // Use synced presenter mode if available, fallback to local theme mode
   const isDark = syncedState?.mode ? syncedState.mode === 'dark' : muiTheme.palette.mode === 'dark';
@@ -680,7 +682,44 @@ export default function ControllerDashboard({
             {isDark ? 'Day Mode' : 'Night Mode'}
           </Button>
         </Paper>
+
+        {/* On-Screen Mobile Debugger */}
+        <Box textAlign="center" mt={2}>
+          <Button
+            size="small"
+            onClick={() => setShowDebug((d) => !d)}
+            sx={{ color: subtitleColor, fontSize: '0.72rem', fontWeight: 700, textTransform: 'none' }}
+          >
+            {showDebug ? 'Hide Diagnostics 🛠️' : '🐞 Troubleshoot & Mobile Diagnostics'}
+          </Button>
+          {showDebug && (
+            <Paper
+              elevation={2}
+              sx={{
+                mt: 1,
+                p: 1.5,
+                borderRadius: '14px',
+                bgcolor: isDark ? '#1F1C2B' : '#F5F5F5',
+                textAlign: 'left',
+                fontSize: '0.72rem',
+                fontFamily: 'monospace',
+                wordBreak: 'break-all',
+              }}
+            >
+              <Typography variant="caption" fontWeight={800} display="block" color="error" mb={0.5}>
+                [Diagnostic Logs]
+              </Typography>
+              <div>🌐 Online: {navigator.onLine ? 'YES ✅' : 'NO ❌'}</div>
+              <div>🔑 Pairing PIN: {pin || inputPin || 'None'}</div>
+              <div>⚡ Connected: {isConnected ? 'YES ✅' : 'NO ❌'}</div>
+              <div>⏳ Connecting: {isConnecting ? 'YES' : 'NO'}</div>
+              <div>⚠️ Peer Error: {peerError || 'None'}</div>
+              <div>🔗 Phone URL: {typeof window !== 'undefined' ? window.location.href : ''}</div>
+            </Paper>
+          )}
+        </Box>
       </Container>
     </Box>
   );
 }
+
