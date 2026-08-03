@@ -1,4 +1,5 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
+
 import { TextField, Button, Typography, Stack, Paper, Box, Chip } from '@mui/material';
 import { formatDuration } from '../utils/formatTime';
 import { initAudio, playCompletionSound, requestNotificationPermission, notify } from '../utils/alerts';
@@ -145,7 +146,7 @@ const Pomodoro = () => {
   const puddingFraction = isActive || isPaused ? (phaseTotal > 0 ? timeLeft / phaseTotal : 1) : 1;
   const goldenSets = Math.floor(stickers / 4);
 
-  const handleStart = () => {
+  const handleStart = useCallback(() => {
     initAudio();
     requestNotificationPermission();
     if (isPaused) {
@@ -164,9 +165,9 @@ const Pomodoro = () => {
     setTimeLeft(total);
     setIsActive(true);
     localStorage.setItem(SESSION_KEY, JSON.stringify({ endTime, phase: 'focus', focusMinutes, breakMinutes }));
-  };
+  }, [isPaused, timeLeft, phase, focusMinutes, breakMinutes]);
 
-  const handlePause = () => {
+  const handlePause = useCallback(() => {
     setIsActive(false);
     // Persist the frozen remaining time so a paused session survives a refresh
     // (same contract as the Timer).
@@ -174,14 +175,15 @@ const Pomodoro = () => {
       SESSION_KEY,
       JSON.stringify({ paused: true, remaining: timeLeft, phase, focusMinutes, breakMinutes })
     );
-  };
+  }, [timeLeft, phase, focusMinutes, breakMinutes]);
 
-  const handleReset = () => {
+  const handleReset = useCallback(() => {
     setIsActive(false);
     setTimeLeft(0);
     setPhase('focus');
     localStorage.removeItem(SESSION_KEY);
-  };
+  }, []);
+
 
   // Dispatch telemetry state for presenter sync
   useEffect(() => {

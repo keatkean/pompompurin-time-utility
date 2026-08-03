@@ -242,7 +242,7 @@ const Timer = () => {
     return endTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   }, [displayTime]);
 
-  const handleStart = () => {
+  const handleStart = useCallback(() => {
     const total = isPaused ? timeLeft : targetSeconds;
     if (total <= 0) return;
     const init = isPaused ? initialTime : total;
@@ -271,9 +271,9 @@ const Timer = () => {
     );
     initAudio();
     requestNotificationPermission();
-  };
+  }, [isPaused, timeLeft, targetSeconds, initialTime, mode, activeSegments, examTitle, activeSegmentInfo]);
 
-  const handlePause = () => {
+  const handlePause = useCallback(() => {
     setIsActive(false);
     localStorage.setItem(
       TIMER_KEY,
@@ -285,9 +285,9 @@ const Timer = () => {
         examTitle: mode === 'exam' ? examTitle : undefined,
       })
     );
-  };
+  }, [timeLeft, initialTime, savedSegments, mode, examTitle]);
 
-  const handleReset = () => {
+  const handleReset = useCallback(() => {
     setIsActive(false);
     setTimeLeft(0);
     setInitialTime(0);
@@ -297,7 +297,7 @@ const Timer = () => {
     lastAnnouncedSegmentRef.current = -1;
     lastAnnouncedMilestoneRef.current = -1;
     localStorage.removeItem(TIMER_KEY);
-  };
+  }, []);
 
   // Dispatch live telemetry state for presenter sync
   useEffect(() => {
@@ -333,7 +333,7 @@ const Timer = () => {
     }
     playCompletionSound();
     notify(`Advanced to next segment! 🍮`);
-  }, [isActive, isPaused, activeSegmentInfo, timeLeft, playCompletionSound, notify]);
+  }, [isActive, isPaused, activeSegmentInfo, timeLeft]);
 
   // Handle remote presenter commands
   useEffect(() => {
@@ -367,6 +367,7 @@ const Timer = () => {
     window.addEventListener('pompompurin-remote-command', onRemoteCommand);
     return () => window.removeEventListener('pompompurin-remote-command', onRemoteCommand);
   }, [isActive, isPaused, handleStart, handlePause, handleReset, handleNextSegment]);
+
 
 
   const applyPreset = (totalSeconds) => {

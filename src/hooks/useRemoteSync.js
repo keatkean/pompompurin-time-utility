@@ -249,7 +249,9 @@ export function useRemoteSync({ appState, onRemoteAction }) {
     connectionsRef.current.forEach((conn) => {
       try {
         conn.close();
-      } catch {}
+      } catch {
+        // Ignore close errors
+      }
     });
     connectionsRef.current = [];
     setConnectedCount(0);

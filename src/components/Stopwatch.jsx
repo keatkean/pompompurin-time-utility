@@ -1,4 +1,5 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
+
 import { Button, Typography, List, ListItem, ListItemText, Box, Stack, Paper } from '@mui/material';
 import { formatStopwatch } from '../utils/formatTime';
 import Pudding from './Pudding';
@@ -43,28 +44,31 @@ const Stopwatch = () => {
 
   // Persist imperatively from the handlers (not on every tick) to avoid 30
   // localStorage writes per second while the stopwatch runs.
-  const persistRunning = (currentLaps) =>
+  const persistRunning = useCallback((currentLaps) => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify({ anchor: startTimeRef.current, isActive: true, laps: currentLaps }));
-  const persistStopped = (currentElapsed, currentLaps) => {
+  }, []);
+
+  const persistStopped = useCallback((currentElapsed, currentLaps) => {
     if (currentElapsed > 0 || currentLaps.length > 0) {
       localStorage.setItem(STORAGE_KEY, JSON.stringify({ elapsed: currentElapsed, isActive: false, laps: currentLaps }));
     } else {
       localStorage.removeItem(STORAGE_KEY);
     }
-  };
+  }, []);
 
-  const handleStart = () => {
+
+  const handleStart = useCallback(() => {
     startTimeRef.current = Date.now() - elapsed;
     setIsActive(true);
     persistRunning(laps);
-  };
+  }, [elapsed, laps, persistRunning]);
 
-  const handleStop = () => {
+  const handleStop = useCallback(() => {
     const stopped = Date.now() - startTimeRef.current;
     setElapsed(stopped);
     setIsActive(false);
     persistStopped(stopped, laps);
-  };
+  }, [laps, persistStopped]);
 
   const MAX_LAPS = 100;
   const handleLap = () => {
@@ -76,12 +80,13 @@ const Stopwatch = () => {
     persistRunning(nextLaps);
   };
 
-  const handleReset = () => {
+  const handleReset = useCallback(() => {
     setIsActive(false);
     setElapsed(0);
     setLaps([]);
     localStorage.removeItem(STORAGE_KEY);
-  };
+  }, []);
+
 
   // Dispatch telemetry state for presenter sync
   useEffect(() => {
