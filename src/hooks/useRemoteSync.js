@@ -1,6 +1,18 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import Peer from 'peerjs';
 
+const PEER_CONFIG = {
+  debug: 1,
+  config: {
+    iceServers: [
+      { urls: 'stun:stun.l.google.com:19302' },
+      { urls: 'stun:stun1.l.google.com:19302' },
+      { urls: 'stun:stun2.l.google.com:19302' },
+      { urls: 'stun:stun3.l.google.com:19302' },
+    ],
+  },
+};
+
 /**
  * Generates a cryptographically secure 6-character case-sensitive PIN (e.g. k9F7p2).
  * Includes both uppercase and lowercase letters for strict case-sensitive pairing security.
@@ -63,7 +75,7 @@ export function useRemoteSync({ appState, onRemoteAction }) {
         timestamp: Date.now(),
       };
       connectionsRef.current.forEach((conn) => {
-        if (conn.open) {
+        if (conn && conn.open) {
           try {
             conn.send(payload);
           } catch {
@@ -102,7 +114,7 @@ export function useRemoteSync({ appState, onRemoteAction }) {
     }
 
     const presenterId = `pompompurin-presenter-${currentPin.trim().toLowerCase()}`;
-    const peer = new Peer(presenterId, { debug: 1 });
+    const peer = new Peer(presenterId, PEER_CONFIG);
     peerRef.current = peer;
 
     peer.on('open', () => {
@@ -110,11 +122,14 @@ export function useRemoteSync({ appState, onRemoteAction }) {
     });
 
     peer.on('connection', (conn) => {
-      connectionsRef.current.push(conn);
-      setConnectedCount(connectionsRef.current.length);
-      setIsConnected(true);
-
       conn.on('open', () => {
+        // Only register connection AFTER WebRTC data channel actually opens!
+        if (!connectionsRef.current.includes(conn)) {
+          connectionsRef.current.push(conn);
+        }
+        setConnectedCount(connectionsRef.current.length);
+        setIsConnected(true);
+
         // Send immediate state payload upon authorization
         conn.send({
           type: 'STATE_SYNC',
@@ -130,7 +145,7 @@ export function useRemoteSync({ appState, onRemoteAction }) {
       });
 
       conn.on('close', () => {
-        connectionsRef.current = connectionsRef.current.filter((c) => c !== conn);
+        connectionsRef.current = connectionsRef.current.filter((c) => c !== conn && c.open);
         setConnectedCount(connectionsRef.current.length);
         if (connectionsRef.current.length === 0) {
           setIsConnected(false);
@@ -138,7 +153,7 @@ export function useRemoteSync({ appState, onRemoteAction }) {
       });
 
       conn.on('error', () => {
-        connectionsRef.current = connectionsRef.current.filter((c) => c !== conn);
+        connectionsRef.current = connectionsRef.current.filter((c) => c !== conn && c.open);
         setConnectedCount(connectionsRef.current.length);
         if (connectionsRef.current.length === 0) {
           setIsConnected(false);
@@ -163,7 +178,7 @@ export function useRemoteSync({ appState, onRemoteAction }) {
     }
 
     const controllerId = `pompompurin-ctl-${cleanPin}-${Math.floor(Math.random() * 100000)}`;
-    const peer = new Peer(controllerId, { debug: 1 });
+    const peer = new Peer(controllerId, PEER_CONFIG);
     peerRef.current = peer;
 
     peer.on('open', () => {
@@ -175,9 +190,9 @@ export function useRemoteSync({ appState, onRemoteAction }) {
         if (!conn.open) {
           setIsConnecting(false);
           setIsConnected(false);
-          setPeerError(`Could not find Presenter for PIN "${targetPin}". Make sure the Presenter Remote modal is open on Laptop A!`);
+          setPeerError(`Could not connect to Presenter for PIN "${targetPin}". Make sure Laptop A is open!`);
         }
-      }, 7000);
+      }, 8000);
 
       conn.on('open', () => {
         clearTimeout(timeout);
@@ -209,18 +224,33 @@ export function useRemoteSync({ appState, onRemoteAction }) {
     peer.on('error', (err) => {
       setIsConnecting(false);
       setIsConnected(false);
-      setPeerError(err?.message || `Failed to connect to PIN "${targetPin}".`);
+      setPeerError(err?.message || 'WebRTC connection error.');
     });
   }, []);
 
-  // Sync state changes from Presenter to active Controllers
+  // Periodic heartbeat to clean dead sockets and keep WebRTC data channels active
+  useEffect(() => {
+    if (isController) return;
+    const interval = setInterval(() => {
+      connectionsRef.current = connectionsRef.current.filter((c) => c.open);
+      setConnectedCount(connectionsRef.current.length);
+      if (connectionsRef.current.length === 0) {
+        setIsConnected(false);
+      } else {
+        broadcastState();
+      }
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [isController, broadcastState]);
+
+  // Sync state broadcast on appState change
   useEffect(() => {
     if (!isController && isConnected) {
       broadcastState(appState);
     }
   }, [appState, isConnected, isController, broadcastState]);
 
-  // Setup PeerJS node on mount or PIN change
+  // Initial setup for presenter or controller
   useEffect(() => {
     if (isController) {
       if (pin) {
@@ -229,13 +259,12 @@ export function useRemoteSync({ appState, onRemoteAction }) {
     } else {
       initPresenter(pin);
     }
-
     return () => {
       if (peerRef.current) {
         peerRef.current.destroy();
       }
     };
-  }, [isController, pin, connectToPresenter, initPresenter]);
+  }, [isController, pin, initPresenter, connectToPresenter]);
 
   const regeneratePin = useCallback(() => {
     const newPin = generatePin();
