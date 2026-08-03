@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+
 
 import {
   Dialog,
@@ -53,15 +54,24 @@ export default function RemoteControlModal({
     }
   };
 
-  // Auto-close modal when controller device connects successfully
+  const prevConnectedRef = useRef(isConnected);
+
+  // Auto-close modal ONLY on fresh connection transition (false -> true) while modal is open
   useEffect(() => {
-    if (isConnected && open) {
-      const timer = setTimeout(() => {
-        onClose();
-      }, 1000);
-      return () => clearTimeout(timer);
+    if (open) {
+      if (!prevConnectedRef.current && isConnected) {
+        const timer = setTimeout(() => {
+          onClose();
+        }, 1200);
+        prevConnectedRef.current = isConnected;
+        return () => clearTimeout(timer);
+      }
+      prevConnectedRef.current = isConnected;
+    } else {
+      prevConnectedRef.current = isConnected;
     }
   }, [isConnected, open, onClose]);
+
 
 
   // Color tokens based on light/dark mode
