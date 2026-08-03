@@ -239,9 +239,20 @@ export function useRemoteSync({ appState, onRemoteAction }) {
     peer.on('error', (err) => {
       setIsConnecting(false);
       setIsConnected(false);
-      setPeerError(err?.message || 'WebRTC connection error.');
+      if (err?.type === 'peer-unavailable') {
+        setPeerError(`Presenter PIN "${targetPin}" was not found yet. Retrying connection...`);
+        // Auto retry once after 2 seconds in case presenter signaling registration had a brief delay
+        setTimeout(() => {
+          if (peerRef.current && !peerRef.current.destroyed) {
+            connectToPresenter(targetPin);
+          }
+        }, 2000);
+      } else {
+        setPeerError(err?.message || 'WebRTC connection error.');
+      }
     });
   }, []);
+
 
   // Periodic heartbeat to clean dead sockets and keep WebRTC data channels active
   useEffect(() => {
