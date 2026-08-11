@@ -41,7 +41,29 @@ const PRESENTATION_PRESETS = [
   { label: '13m: Pair (4m each) + 5m Q&A', speakers: 2, speakerMins: 4, qaMins: 5 },
 ];
 
-const clampNumber = (value, min, max) => Math.max(min, Math.min(max, parseInt(value, 10) || min));
+const clampNumber = (value, min, max) => {
+  if (value === '' || value === null || value === undefined) return '';
+  const parsed = parseInt(value, 10);
+  if (isNaN(parsed)) return '';
+  if (parsed > max) return max;
+  if (parsed < 0) return 0;
+  return parsed;
+};
+
+const handleBlurInput = (value, min, max, setter) => {
+  if (value === '' || value === null || value === undefined) {
+    setter(min);
+    return;
+  }
+  const parsed = parseInt(value, 10);
+  if (isNaN(parsed) || parsed < min) {
+    setter(min);
+  } else if (parsed > max) {
+    setter(max);
+  } else {
+    setter(parsed);
+  }
+};
 
 function loadSavedTimer() {
   try {
@@ -127,12 +149,16 @@ const Timer = () => {
     if (savedSegments && (isActive || timeLeft > 0)) {
       return savedSegments;
     }
+    const count = Math.max(1, Math.min(10, parseInt(speakerCount, 10) || 1));
+    const mins = Math.max(1, Math.min(60, parseInt(speakerMins, 10) || 1));
+    const qa = Math.max(0, Math.min(60, parseInt(qaMins, 10) || 0));
+
     const segs = [];
-    for (let i = 1; i <= speakerCount; i += 1) {
-      segs.push({ label: `Student ${i}`, duration: speakerMins * 60 });
+    for (let i = 1; i <= count; i += 1) {
+      segs.push({ label: `Student ${i}`, duration: mins * 60 });
     }
-    if (qaMins > 0) {
-      segs.push({ label: 'Q&A Session', duration: qaMins * 60 });
+    if (qa > 0) {
+      segs.push({ label: 'Q&A Session', duration: qa * 60 });
     }
     return segs;
   }, [savedSegments, isActive, timeLeft, speakerCount, speakerMins, qaMins]);
@@ -404,9 +430,9 @@ const Timer = () => {
   };
 
   const timeFields = [
-    { label: 'Hours', value: hours, setter: (v) => setHours(clampNumber(v, 0, 99)), max: 99 },
-    { label: 'Minutes', value: minutes, setter: (v) => setMinutes(clampNumber(v, 0, 59)), max: 59 },
-    { label: 'Seconds', value: seconds, setter: (v) => setSeconds(clampNumber(v, 0, 59)), max: 59 },
+    { label: 'Hours', value: hours, rawSetter: setHours, min: 0, max: 99 },
+    { label: 'Minutes', value: minutes, rawSetter: setMinutes, min: 0, max: 59 },
+    { label: 'Seconds', value: seconds, rawSetter: setSeconds, min: 0, max: 59 },
   ];
 
   return (
@@ -637,16 +663,17 @@ const Timer = () => {
               </Stack>
 
               <Stack direction="row" spacing={{ xs: 1, sm: 3 }} justifyContent="center" flexWrap="wrap" useFlexGap width="100%">
-                {timeFields.map(({ label, value, setter, max }) => (
+                {timeFields.map(({ label, value, rawSetter, min, max }) => (
                   <TextField
                     key={label}
                     label={label}
                     type="number"
                     value={value}
-                    onChange={(e) => setter(e.target.value)}
+                    onChange={(e) => rawSetter(clampNumber(e.target.value, min, max))}
+                    onBlur={() => handleBlurInput(value, min, max, rawSetter)}
                     disabled={isActive || isPaused}
-                    sx={{ width: { xs: 'calc(33.33% - 8px)', sm: 90 }, minWidth: 70 }}
-                    slotProps={{ htmlInput: { min: 0, max } }}
+                    sx={{ flex: { xs: '1 1 calc(33.33% - 8px)', sm: '0 0 auto' }, width: { sm: 90 }, minWidth: 70 }}
+                    slotProps={{ htmlInput: { min, max, inputMode: 'numeric' } }}
                   />
                 ))}
               </Stack>
@@ -674,24 +701,27 @@ const Timer = () => {
                   type="number"
                   value={speakerCount}
                   onChange={(e) => setSpeakerCount(clampNumber(e.target.value, 1, 10))}
-                  sx={{ width: { xs: 'calc(50% - 6px)', sm: 110 } }}
-                  slotProps={{ htmlInput: { min: 1, max: 10 } }}
+                  onBlur={() => handleBlurInput(speakerCount, 1, 10, setSpeakerCount)}
+                  sx={{ flex: { xs: '1 1 calc(33.33% - 8px)', sm: '0 0 auto' }, width: { sm: 110 }, minWidth: { xs: 90, sm: 110 } }}
+                  slotProps={{ htmlInput: { min: 1, max: 10, inputMode: 'numeric' } }}
                 />
                 <TextField
                   label="Time/Person (m)"
                   type="number"
                   value={speakerMins}
                   onChange={(e) => setSpeakerMins(clampNumber(e.target.value, 1, 60))}
-                  sx={{ width: { xs: 'calc(50% - 6px)', sm: 140 } }}
-                  slotProps={{ htmlInput: { min: 1, max: 60 } }}
+                  onBlur={() => handleBlurInput(speakerMins, 1, 60, setSpeakerMins)}
+                  sx={{ flex: { xs: '1 1 calc(33.33% - 8px)', sm: '0 0 auto' }, width: { sm: 140 }, minWidth: { xs: 105, sm: 140 } }}
+                  slotProps={{ htmlInput: { min: 1, max: 60, inputMode: 'numeric' } }}
                 />
                 <TextField
                   label="Q&A Time (m)"
                   type="number"
                   value={qaMins}
                   onChange={(e) => setQaMins(clampNumber(e.target.value, 0, 60))}
-                  sx={{ width: { xs: '100%', sm: 130 } }}
-                  slotProps={{ htmlInput: { min: 0, max: 60 } }}
+                  onBlur={() => handleBlurInput(qaMins, 0, 60, setQaMins)}
+                  sx={{ flex: { xs: '1 1 calc(33.33% - 8px)', sm: '0 0 auto' }, width: { sm: 130 }, minWidth: { xs: 95, sm: 130 } }}
+                  slotProps={{ htmlInput: { min: 0, max: 60, inputMode: 'numeric' } }}
                 />
               </Stack>
             </Stack>
@@ -709,16 +739,17 @@ const Timer = () => {
                 sx={{ maxWidth: 380 }}
               />
               <Stack direction="row" spacing={{ xs: 1, sm: 3 }} justifyContent="center" flexWrap="wrap" useFlexGap width="100%">
-                {timeFields.map(({ label, value, setter, max }) => (
+                {timeFields.map(({ label, value, rawSetter, min, max }) => (
                   <TextField
                     key={label}
                     label={label}
                     type="number"
                     value={value}
-                    onChange={(e) => setter(e.target.value)}
+                    onChange={(e) => rawSetter(clampNumber(e.target.value, min, max))}
+                    onBlur={() => handleBlurInput(value, min, max, rawSetter)}
                     disabled={isActive || isPaused}
-                    sx={{ width: { xs: 'calc(33.33% - 8px)', sm: 90 }, minWidth: 70 }}
-                    slotProps={{ htmlInput: { min: 0, max } }}
+                    sx={{ flex: { xs: '1 1 calc(33.33% - 8px)', sm: '0 0 auto' }, width: { sm: 90 }, minWidth: 70 }}
+                    slotProps={{ htmlInput: { min, max, inputMode: 'numeric' } }}
                   />
                 ))}
               </Stack>

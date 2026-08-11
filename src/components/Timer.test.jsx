@@ -28,6 +28,7 @@ describe('Timer', () => {
     const minutes = screen.getByLabelText('Minutes');
 
     fireEvent.change(seconds, { target: { value: '' } });
+    fireEvent.blur(seconds);
     expect(seconds).toHaveValue(0);
 
     fireEvent.change(minutes, { target: { value: '75' } });
@@ -35,6 +36,38 @@ describe('Timer', () => {
 
     fireEvent.change(minutes, { target: { value: '-5' } });
     expect(minutes).toHaveValue(0);
+  });
+
+  it('allows clearing and re-keying presentation segment inputs without unwanted clamping', () => {
+    render(<Timer />);
+    fireEvent.click(screen.getByRole('button', { name: 'Presentation Segments' }));
+
+    const presenters = screen.getByLabelText('Presenters');
+    const timePerson = screen.getByLabelText('Time/Person (m)');
+    const qaTime = screen.getByLabelText('Q&A Time (m)');
+
+    // Clear presenters input and key in 4
+    fireEvent.change(presenters, { target: { value: '' } });
+    expect(presenters).toHaveValue(null);
+    fireEvent.change(presenters, { target: { value: '4' } });
+    expect(presenters).toHaveValue(4);
+
+    // Clear time/person input and key in 8
+    fireEvent.change(timePerson, { target: { value: '' } });
+    expect(timePerson).toHaveValue(null);
+    fireEvent.change(timePerson, { target: { value: '8' } });
+    expect(timePerson).toHaveValue(8);
+
+    // Clear Q&A input and key in 3
+    fireEvent.change(qaTime, { target: { value: '' } });
+    expect(qaTime).toHaveValue(null);
+    fireEvent.change(qaTime, { target: { value: '3' } });
+    expect(qaTime).toHaveValue(3);
+
+    // Test blur fallback when left empty
+    fireEvent.change(presenters, { target: { value: '' } });
+    fireEvent.blur(presenters);
+    expect(presenters).toHaveValue(1);
   });
 
   it('accepts a natural-language quick set', () => {

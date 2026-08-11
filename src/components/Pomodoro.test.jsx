@@ -134,6 +134,8 @@ describe('Pomodoro', () => {
     fireEvent.change(focus, { target: { value: '999' } });
     expect(focus).toHaveValue(120);
     fireEvent.change(focus, { target: { value: '' } });
+    expect(focus).toHaveValue(null);
+    fireEvent.blur(focus);
     expect(focus).toHaveValue(1);
   });
 });

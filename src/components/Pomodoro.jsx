@@ -19,7 +19,29 @@ const stickerProps = (i) =>
     ? { golden: true }
     : { flavor: STICKER_FLAVORS[Math.floor(i / 4) % STICKER_FLAVORS.length] };
 
-const clampMinutes = (value, max) => Math.max(1, Math.min(max, parseInt(value, 10) || 1));
+const clampMinutes = (value, max) => {
+  if (value === '' || value === null || value === undefined) return '';
+  const parsed = parseInt(value, 10);
+  if (isNaN(parsed)) return '';
+  if (parsed > max) return max;
+  if (parsed < 1) return 1;
+  return parsed;
+};
+
+const handleBlurMinutes = (value, max, setter) => {
+  if (value === '' || value === null || value === undefined) {
+    setter(1);
+    return;
+  }
+  const parsed = parseInt(value, 10);
+  if (isNaN(parsed) || parsed < 1) {
+    setter(1);
+  } else if (parsed > max) {
+    setter(max);
+  } else {
+    setter(parsed);
+  }
+};
 
 function loadStickers() {
   try {
@@ -141,8 +163,10 @@ const Pomodoro = () => {
   }, [isActive, phase, focusMinutes, breakMinutes]);
 
   const isPaused = !isActive && timeLeft > 0;
-  const phaseTotal = (phase === 'focus' ? focusMinutes : breakMinutes) * 60;
-  const displayTime = isActive || isPaused ? timeLeft : focusMinutes * 60;
+  const validFocusMins = Math.max(1, Math.min(120, parseInt(focusMinutes, 10) || 1));
+  const validBreakMins = Math.max(1, Math.min(30, parseInt(breakMinutes, 10) || 1));
+  const phaseTotal = (phase === 'focus' ? validFocusMins : validBreakMins) * 60;
+  const displayTime = isActive || isPaused ? timeLeft : validFocusMins * 60;
   const puddingFraction = isActive || isPaused ? (phaseTotal > 0 ? timeLeft / phaseTotal : 1) : 1;
   const goldenSets = Math.floor(stickers / 4);
 
@@ -251,18 +275,20 @@ const Pomodoro = () => {
               type="number"
               value={focusMinutes}
               onChange={(e) => setFocusMinutes(clampMinutes(e.target.value, 120))}
+              onBlur={() => handleBlurMinutes(focusMinutes, 120, setFocusMinutes)}
               disabled={isActive || isPaused}
               sx={{ width: { xs: 105, sm: 120 } }}
-              slotProps={{ htmlInput: { min: 1, max: 120 } }}
+              slotProps={{ htmlInput: { min: 1, max: 120, inputMode: 'numeric' } }}
             />
             <TextField
               label="Break (min)"
               type="number"
               value={breakMinutes}
               onChange={(e) => setBreakMinutes(clampMinutes(e.target.value, 30))}
+              onBlur={() => handleBlurMinutes(breakMinutes, 30, setBreakMinutes)}
               disabled={isActive || isPaused}
               sx={{ width: { xs: 105, sm: 120 } }}
-              slotProps={{ htmlInput: { min: 1, max: 30 } }}
+              slotProps={{ htmlInput: { min: 1, max: 30, inputMode: 'numeric' } }}
             />
           </Stack>
           <Stack direction="row" spacing={{ xs: 1, sm: 3 }} justifyContent="center" flexWrap="wrap" useFlexGap>
